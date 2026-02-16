@@ -215,7 +215,7 @@ function embedContent(url) {
     }
 
     // ===== VIDEO =====
-  if (lower.match(/\.(mp4|webm|ogg)$/)) {
+if (lower.match(/\.(mp4|webm|ogg)$/)) {
     const video = document.createElement("video");
     video.src = url;
     video.autoplay = true;
@@ -243,8 +243,9 @@ function embedContent(url) {
     video.play().catch(() => {});
     return;
 }
+
     // ===== AUDIO =====
- if (lower.match(/\.(mp3|wav|ogg)$/)) {
+if (lower.match(/\.(mp3|wav|ogg)$/)) {
     const audio = document.createElement("audio");
     audio.src = url;
     audio.autoplay = true;
@@ -269,6 +270,7 @@ function embedContent(url) {
     audio.play().catch(() => {});
     return;
 }
+
     // ===== PDF =====
   if (lower.match(/\.pdf$/)) {
     const embed = document.createElement("embed");
@@ -524,6 +526,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
