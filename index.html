@@ -15,9 +15,7 @@ html, body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     color: white;
-    background: transparent; /* add this */
 }
-
 
 /* BACKGROUND */
 #backgroundLayer {
@@ -27,8 +25,7 @@ html, body {
 }
 
 #backgroundLayer canvas {
-    width: 100vw;
-    height: 100vh;
+    display: block;
 }
 
 /* GAME */
@@ -64,6 +61,7 @@ header {
 
 #contentDisplay {
     width: min(95%, 1000px);
+    height: 60vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -98,6 +96,9 @@ header {
 #revealBtn:hover { transform: translateY(-3px); }
 #revealBtn:active { transform: scale(0.9); }
 
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure {
+    display: none !important;
 }
 </style>
 </head>
@@ -354,8 +355,9 @@ for (let i = 0; i < BOID_COUNT; i++) {
 }
 
 function animate() {
-  ctx.clearRect(0, 0, width, height);
-
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "white";
 
   frame++;
   updateFields();
@@ -439,7 +441,6 @@ function embedContent(url) {
     display.innerHTML = "";
     const lower = url.toLowerCase();
 
-    // IMAGE
     if (lower.match(/\.(jpeg|jpg|png|gif|webp)$/)) {
         const img = document.createElement("img");
         img.src = url;
@@ -447,46 +448,13 @@ function embedContent(url) {
         return;
     }
 
-    // VIDEO
-    if (lower.match(/\.(mp4|webm|ogg)$/)) {
-        const video = document.createElement("video");
-        video.src = url;
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
-        video.style.maxWidth = "100%";
-        video.style.maxHeight = "100%";
-        video.style.objectFit = "contain";
-        display.appendChild(video);
-        return;
-    }
-
-    // AUDIO
-    if (lower.match(/\.(mp3|wav|ogg)$/)) {
-        const audio = document.createElement("audio");
-        audio.src = url;
-        audio.autoplay = true;
-        audio.loop = true;
-        display.appendChild(audio);
-        return;
-    }
-
-    // FALLBACK (iframe)
     const iframe = document.createElement("iframe");
     iframe.src = url;
     iframe.style.width = "100%";
     iframe.style.height = "100%";
-    iframe.style.border = "none";
     display.appendChild(iframe);
 }
-
 
 </script>
 </body>
 </html>
-
-
-
-
-
