@@ -93,6 +93,14 @@ header {
 #revealBtn:hover { transform: translateY(-3px); }
 #revealBtn:active { transform: scale(0.9); }
 
+    video::-webkit-media-controls {
+    display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+    display: none !important;
+}
+
 </style>
 </head>
 
@@ -224,32 +232,27 @@ function embedContent(url) {
     // ===== VIDEO =====
 if (lower.match(/\.(mp4|webm|ogg)$/)) {
     const video = document.createElement("video");
+
     video.src = url;
     video.autoplay = true;
-    video.muted = false;
     video.playsInline = true;
     video.preload = "auto";
-
     video.controls = false;
+    video.removeAttribute("controls");
 
-    // Prevent pause
-    video.addEventListener("pause", () => {
-        video.play();
-    });
+    // Hard-disable any UI
+    video.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
+    video.disablePictureInPicture = true;
 
-    // Prevent seeking
-    video.addEventListener("seeking", () => {
-        video.currentTime = 0;
-    });
-
-    // Disable right-click
-    video.addEventListener("contextmenu", e => e.preventDefault());
+    // Remove interaction completely
+    video.style.pointerEvents = "none";
 
     display.appendChild(video);
 
     video.play().catch(() => {});
     return;
 }
+
 
     // ===== AUDIO =====
 if (lower.match(/\.(mp3|wav|ogg)$/)) {
@@ -533,6 +536,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
