@@ -215,50 +215,60 @@ function embedContent(url) {
     }
 
     // ===== VIDEO =====
-   if (lower.match(/\.(mp4|webm|ogg)$/)) {
+  if (lower.match(/\.(mp4|webm|ogg)$/)) {
     const video = document.createElement("video");
     video.src = url;
-    video.controls = true;
     video.autoplay = true;
+    video.muted = false;
     video.playsInline = true;
     video.preload = "auto";
 
-    video.addEventListener("error", e => {
-        console.log("VIDEO ERROR:", video.error);
+    video.controls = false;
+
+    // Prevent pause
+    video.addEventListener("pause", () => {
+        video.play();
     });
 
-    video.addEventListener("loadeddata", () => {
-        console.log("Video loaded");
+    // Prevent seeking
+    video.addEventListener("seeking", () => {
+        video.currentTime = 0;
     });
+
+    // Disable right-click
+    video.addEventListener("contextmenu", e => e.preventDefault());
 
     display.appendChild(video);
 
-    video.play().catch(err => {
-        console.log("Play failed:", err);
-    });
-
+    video.play().catch(() => {});
     return;
 }
-
-
     // ===== AUDIO =====
-  if (lower.match(/\.(mp3|wav|ogg)$/)) {
+ if (lower.match(/\.(mp3|wav|ogg)$/)) {
     const audio = document.createElement("audio");
     audio.src = url;
-    audio.controls = true;
     audio.autoplay = true;
-    audio.playsInline = true;
-    display.appendChild(audio);
+    audio.preload = "auto";
 
-    // Force play attempt
-    audio.play().catch(err => {
-        console.log("Autoplay blocked:", err);
+    audio.controls = false;
+
+    // Prevent pause
+    audio.addEventListener("pause", () => {
+        audio.play();
     });
 
+    // Prevent seeking
+    audio.addEventListener("seeking", () => {
+        audio.currentTime = 0;
+    });
+
+    audio.addEventListener("contextmenu", e => e.preventDefault());
+
+    display.appendChild(audio);
+
+    audio.play().catch(() => {});
     return;
 }
-
-
     // ===== PDF =====
   if (lower.match(/\.pdf$/)) {
     const embed = document.createElement("embed");
@@ -514,6 +524,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
