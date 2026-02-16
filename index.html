@@ -215,17 +215,31 @@ function embedContent(url) {
     }
 
     // ===== VIDEO =====
-    if (lower.match(/\.(mp4|webm|ogg)$/)) {
-        const video = document.createElement("video");
-        video.src = url;
-        video.controls = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.style.maxWidth = "100%";
-        video.style.maxHeight = "100%";
-        display.appendChild(video);
-        return;
-    }
+   if (lower.match(/\.(mp4|webm|ogg)$/)) {
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.preload = "auto";
+
+    video.addEventListener("error", e => {
+        console.log("VIDEO ERROR:", video.error);
+    });
+
+    video.addEventListener("loadeddata", () => {
+        console.log("Video loaded");
+    });
+
+    display.appendChild(video);
+
+    video.play().catch(err => {
+        console.log("Play failed:", err);
+    });
+
+    return;
+}
+
 
     // ===== AUDIO =====
   if (lower.match(/\.(mp3|wav|ogg)$/)) {
@@ -500,6 +514,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
