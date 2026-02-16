@@ -249,17 +249,15 @@ function embedContent(url) {
 
 
     // ===== PDF =====
-   if (lower.match(/\.pdf$/)) {
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.type = "application/pdf";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    display.appendChild(iframe);
+  if (lower.match(/\.pdf$/)) {
+    const embed = document.createElement("embed");
+    embed.src = url;
+    embed.type = "application/pdf";
+    embed.style.width = "100%";
+    embed.style.height = "100%";
+    display.appendChild(embed);
     return;
 }
-
 
     // ===== Fallback (iframe for anything else) =====
     const iframe = document.createElement("iframe");
@@ -505,6 +503,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
