@@ -24,6 +24,12 @@ html, body {
     z-index: 0;
 }
 
+#backgroundLayer canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
 /* ===== MAIN LAYER ===== */
 #mainLayer {
     position: relative;
@@ -31,6 +37,7 @@ html, body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    background: transparent;
 }
 
 /* ===== HEADER ===== */
@@ -97,21 +104,17 @@ video::-webkit-media-controls,
 video::-webkit-media-controls-enclosure {
     display: none !important;
 }
-
-canvas {
-    display: block;
-}
 </style>
 </head>
 
 <body>
 
-<!-- ================= BACKGROUND ================= -->
+<!-- ===== BACKGROUND ===== -->
 <div id="backgroundLayer">
 <canvas id="canvas"></canvas>
 </div>
 
-<!-- ================= GAME ================= -->
+<!-- ===== GAME ===== -->
 <div id="mainLayer">
 
 <header>
@@ -130,7 +133,6 @@ src="https://raw.githubusercontent.com/redesencontros/deiao-dados/main/button-ic
 <script>
 /* ===========================
    ===== BACKGROUND CODE =====
-   (UNCHANGED)
 =========================== */
 
 const canvas = document.getElementById("canvas");
@@ -155,19 +157,14 @@ const entrySide = Math.floor(Math.random() * 4);
 const perception = 40;
 const cellSize = perception;
 let grid = {};
-let cols, rows;
 
 function buildGrid() {
   grid = {};
-  cols = Math.ceil(width / cellSize);
-  rows = Math.ceil(height / cellSize);
-
   for (let i = 0; i < boids.length; i++) {
     const b = boids[i];
     const cx = Math.floor(b.x / cellSize);
     const cy = Math.floor(b.y / cellSize);
     const key = cx + "," + cy;
-
     if (!grid[key]) grid[key] = [];
     grid[key].push(b);
   }
@@ -176,46 +173,16 @@ function buildGrid() {
 function getNearbyBoids(boid) {
   const cx = Math.floor(boid.x / cellSize);
   const cy = Math.floor(boid.y / cellSize);
-
   let neighbors = [];
 
   for (let x = -1; x <= 1; x++) {
     for (let y = -1; y <= 1; y++) {
       const key = (cx + x) + "," + (cy + y);
-      if (grid[key]) {
-        neighbors = neighbors.concat(grid[key]);
-      }
+      if (grid[key]) neighbors = neighbors.concat(grid[key]);
     }
   }
 
   return neighbors;
-}
-
-const fields = [];
-const MAX_FIELDS = 3;
-
-function spawnField() {
-  const field = {
-    x: Math.random() * width,
-    y: Math.random() * height,
-    radius: 250 + Math.random() * 400,
-    strength: (Math.random() > 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.5),
-    life: 500 + Math.random() * 400
-  };
-  fields.push(field);
-}
-
-function updateFields() {
-  if (fields.length < MAX_FIELDS && Math.random() < 0.01) {
-    spawnField();
-  }
-
-  for (let i = fields.length - 1; i >= 0; i--) {
-    fields[i].life--;
-    if (fields[i].life <= 0) {
-      fields.splice(i, 1);
-    }
-  }
 }
 
 class Boid {
@@ -225,38 +192,15 @@ class Boid {
     const r = Math.random() * clusterRadius;
     const far = 600;
 
-    if (entrySide === 0) {
-      this.x = -far + Math.cos(angle) * r;
-      this.y = height / 2 + Math.sin(angle) * r;
-      this.vx = 3.5;
-      this.vy = (Math.random() - 0.5) * 0.4;
-    }
-
-    if (entrySide === 1) {
-      this.x = width + far + Math.cos(angle) * r;
-      this.y = height / 2 + Math.sin(angle) * r;
-      this.vx = -3.5;
-      this.vy = (Math.random() - 0.5) * 0.4;
-    }
-
-    if (entrySide === 2) {
-      this.x = width / 2 + Math.cos(angle) * r;
-      this.y = -far + Math.sin(angle) * r;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = 3.5;
-    }
-
-    if (entrySide === 3) {
-      this.x = width / 2 + Math.cos(angle) * r;
-      this.y = height + far + Math.sin(angle) * r;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = -3.5;
-    }
+    this.x = -far + Math.cos(angle) * r;
+    this.y = height / 2 + Math.sin(angle) * r;
+    this.vx = 3.5;
+    this.vy = (Math.random() - 0.5) * 0.4;
   }
 
   update() {
     let alignX = 0, alignY = 0;
-    let cohesionX = 1, cohesionY = 1;
+    let cohesionX = 0, cohesionY = 0;
     let separationX = 0, separationY = 0;
     let count = 0;
 
@@ -272,8 +216,8 @@ class Boid {
       const distSq = dx * dx + dy * dy;
 
       if (distSq < perceptionSq) {
-        alignX += other.vx * 0.7;
-        alignY += other.vy * 0.7;
+        alignX += other.vx;
+        alignY += other.vy;
         cohesionX += other.x;
         cohesionY += other.y;
 
@@ -302,47 +246,6 @@ class Boid {
       this.vy += separationY * 0.02;
     }
 
-    const globalPull = 0.00008;
-    this.vx += (width / 2 - this.x) * globalPull;
-    this.vy += (height / 2 - this.y) * globalPull;
-
-    for (let f = 0; f < fields.length; f++) {
-      const field = fields[f];
-      const dx = field.x - this.x;
-      const dy = field.y - this.y;
-      const distSq = dx * dx + dy * dy;
-      const rSq = field.radius * field.radius;
-
-      if (distSq < rSq) {
-        const falloff = 1 - distSq / rSq;
-        const influence = field.strength * falloff * 0.0004;
-        this.vx += dx * influence;
-        this.vy += dy * influence;
-      }
-    }
-
-    const windX = Math.sin(this.y * 0.002 + time) * 0.25;
-    const windY = Math.cos(this.x * 0.002 - time) * 0.25;
-    this.vx += windX * 0.02;
-    this.vy += windY * 0.02;
-
-    const speedSq = this.vx * this.vx + this.vy * this.vy;
-    const maxSpeed = 4;
-
-    if (speedSq > maxSpeed * maxSpeed) {
-      const scale = maxSpeed / Math.sqrt(speedSq);
-      this.vx *= scale;
-      this.vy *= scale;
-    }
-
-    const margin = 5;
-    const force = 0.2;
-
-    if (this.x < -margin) this.vx += force;
-    if (this.x > width + margin) this.vx -= force;
-    if (this.y < -margin) this.vy += force;
-    if (this.y > height + margin) this.vy -= force;
-
     this.x += this.vx;
     this.y += this.vy;
   }
@@ -357,18 +260,15 @@ for (let i = 0; i < BOID_COUNT; i++) {
 }
 
 function animate() {
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.fillRect(0, 0, width, height);
+
   ctx.fillStyle = "white";
 
-  frame++;
-  updateFields();
   buildGrid();
 
   for (let i = 0; i < boids.length; i++) {
-    if (i % 4 === frame % 4) {
-      boids[i].update();
-    }
+    boids[i].update();
     boids[i].draw();
   }
 
@@ -380,7 +280,6 @@ animate();
 
 /* ===========================
    ===== GAME CODE =====
-   (UNCHANGED)
 =========================== */
 
 const sheetURL = "links.txt";
@@ -390,14 +289,9 @@ let isLoaded = false;
 
 async function fetchSheet() {
     if (isLoaded) return;
-
     const response = await fetch(sheetURL + "?cacheBust=" + Date.now());
     const text = await response.text();
-
-    links = text.split(/\r?\n/)
-                .map(r => r.trim())
-                .filter(r => r.length > 0);
-
+    links = text.split(/\r?\n/).map(r => r.trim()).filter(r => r.length > 0);
     shuffleDeck();
     isLoaded = true;
 }
@@ -413,17 +307,11 @@ function shuffleDeck() {
 document.getElementById("revealBtn").addEventListener("click", loadNextFromDeck);
 
 async function loadNextFromDeck() {
-
     const display = document.getElementById("contentDisplay");
-
     await fetchSheet();
-
     if (deck.length === 0) shuffleDeck();
-
     const nextLink = deck.pop();
-
     display.classList.add("fade-out");
-
     setTimeout(() => {
         stopAllMedia();
         embedContent(nextLink);
@@ -441,50 +329,14 @@ function stopAllMedia() {
 }
 
 function embedContent(url) {
-
     const display = document.getElementById("contentDisplay");
     display.innerHTML = "";
-
     const lower = url.toLowerCase();
 
     if (lower.match(/\.(jpeg|jpg|png|gif|webp)$/)) {
         const img = document.createElement("img");
         img.src = url;
         display.appendChild(img);
-        return;
-    }
-
-    if (lower.match(/\.(mp4|webm|ogg)$/)) {
-        const video = document.createElement("video");
-        video.src = url;
-        video.autoplay = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.preload = "auto";
-        video.controls = false;
-        display.appendChild(video);
-        video.play().catch(()=>{});
-        return;
-    }
-
-    if (lower.match(/\.(mp3|wav|ogg)$/)) {
-        const audio = document.createElement("audio");
-        audio.src = url;
-        audio.autoplay = true;
-        audio.loop = true;
-        audio.preload = "auto";
-        display.appendChild(audio);
-        audio.play().catch(()=>{});
-        return;
-    }
-
-    if (lower.match(/\.pdf$/)) {
-        const embed = document.createElement("embed");
-        embed.src = url;
-        embed.type = "application/pdf";
-        embed.style.width = "100%";
-        embed.style.height = "100%";
-        display.appendChild(embed);
         return;
     }
 
