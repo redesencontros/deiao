@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DANÇA é isso aqui, ó</title>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+/* ===== BACKGROUND CANVAS ===== */
+#bgCanvas {
+    position: fixed;
+    inset: 1;
+    z-index: 1;
+    background: #333635;
+}
+
+/* ===== MAIN LAYER ===== */
+#mainLayer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* ===== HEADER ===== */
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2vh 0 1vh 0;
+}
+
+#headerLogo {
+    width: clamp(150px, 30vw, 300px);
+}
+
+/* ===== GAME CONTAINER ===== */
+#gameContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4vh;
+    padding: 2vh 4vw 6vh 4vw;
+}
+
+#contentDisplay {
+    width: min(95%, 1000px);
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+}
+
+#contentDisplay.fade-out { opacity: 0; }
+
+#contentDisplay img,
+#contentDisplay video,
+#contentDisplay audio,
+#contentDisplay iframe {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* ===== BUTTON ===== */
+#revealBtn {
+    width: clamp(40px, 7vw, 75px);
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.3s ease;
+}
+
+#revealBtn:hover { transform: translateY(-3px); }
+#revealBtn:active { transform: scale(0.9); }
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div id="mainLayer">
+
+<header>
+    <img id="headerLogo"
+         src="https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/DAN%C3%87A%20logo.png"
+         alt="DANÇA">
+</header>
+
+<div id="gameContainer">
+    <div id="contentDisplay"></div>
+
+    <img id="revealBtn"
+         src="https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/button-icon-png-21057.png"
+         alt="Reveal">
+</div>
+
+</div>
+
+<script>
+
+/* ===========================
+   ======= GAME LOGIC =======
+=========================== */
+
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuFttPz9V6ebi3kPFI8SfQvrrWAJjmizNtPhTuTuivpN3qLt8gUPu71mwhzoeG5yB4uBDwW2PJTbuC/pub?gid=0&single=true&output=tsv";
+
+let links = [];
+let deck = [];
+let isLoaded = false;
+
+async function fetchSheet() {
+    if (isLoaded) return;
+
+    const response = await fetch(sheetURL + "&cacheBust=" + Date.now());
+    const text = await response.text();
+
+    const rows = text.split(/\r?\n/)
+                     .map(r => r.trim())
+                     .filter(r => r.length > 0);
+
+    links = rows.map(r => r.split("\t")[0]);
+    shuffleDeck();
+    isLoaded = true;
+    preloadUpcoming(3);
+}
+
+function shuffleDeck() {
+    deck = [...links];
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+}
+
+function preloadUpcoming(count) {
+    const upcoming = deck.slice(-count);
+    upcoming.forEach(url => {
+        if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+            const img = new Image();
+            img.src = url;
+        }
+    });
+}
+
+document.getElementById("revealBtn").addEventListener("click", loadNextFromDeck);
+
+async function loadNextFromDeck() {
+
+    const display = document.getElementById("contentDisplay");
+
+    await fetchSheet();
+
+    if (deck.length === 0) {
+        shuffleDeck();
+        preloadUpcoming(3);
+    }
+
+    const nextLink = deck.pop();
+
+    display.classList.add("fade-out");
+
+    setTimeout(() => {
+        embedContent(nextLink);
+        display.classList.remove("fade-out");
+        preloadUpcoming(3);
+    }, 300);
+}
+
+function embedContent(url) {
+    const display = document.getElementById("contentDisplay");
+    display.innerHTML = "";
+
+    if (!url) return;
+
+    if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+        const img = document.createElement("img");
+        img.src = url;
+        display.appendChild(img);
+        return;
+    }
+}
+
+
+/* ===========================
+   ===== AMEBA BACKGROUND =====
+=========================== */
+
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
+
+let width, height;
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const BOID_COUNT = 3000;
+const boids = [];
+
+let time = 0;
+let frame = 0;
+
+const entrySide = Math.floor(Math.random() * 4);
+
+const perception = 40;
+const cellSize = perception;
+let grid = {};
+let cols, rows;
+
+function buildGrid() {
+  grid = {};
+  cols = Math.ceil(width / cellSize);
+  rows = Math.ceil(height / cellSize);
+
+  for (let i = 0; i < boids.length; i++) {
+    const b = boids[i];
+    const cx = Math.floor(b.x / cellSize);
+    const cy = Math.floor(b.y / cellSize);
+    const key = cx + "," + cy;
+
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(b);
+  }
+}
+
+function getNearbyBoids(boid) {
+  const cx = Math.floor(boid.x / cellSize);
+  const cy = Math.floor(boid.y / cellSize);
+
+  let neighbors = [];
+
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      const key = (cx + x) + "," + (cy + y);
+      if (grid[key]) neighbors = neighbors.concat(grid[key]);
+    }
+  }
+
+  return neighbors;
+}
+
+const fields = [];
+const MAX_FIELDS = 3;
+
+function spawnField() {
+  fields.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    radius: 250 + Math.random() * 400,
+    strength: (Math.random() > 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.5),
+    life: 500 + Math.random() * 400
+  });
+}
+
+function updateFields() {
+  if (fields.length < MAX_FIELDS && Math.random() < 0.01) spawnField();
+
+  for (let i = fields.length - 1; i >= 0; i--) {
+    fields[i].life--;
+    if (fields[i].life <= 0) fields.splice(i, 1);
+  }
+}
+
+class Boid {
+  constructor() {
+    const clusterRadius = 260;
+    const angle = Math.random() * Math.PI * 2;
+    const r = Math.random() * clusterRadius;
+    const far = 600;
+
+    if (entrySide === 0) {
+      this.x = -far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = 3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 1) {
+      this.x = width + far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = -3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 2) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = -far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = 3.5;
+    }
+
+    if (entrySide === 3) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = height + far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = -3.5;
+    }
+  }
+
+  update() {
+    let alignX = 0, alignY = 0;
+    let cohesionX = 1, cohesionY = 1;
+    let separationX = 0, separationY = 0;
+    let count = 0;
+
+    const perceptionSq = perception * perception;
+    const neighbors = getNearbyBoids(this);
+
+    for (let other of neighbors) {
+      if (other === this) continue;
+
+      const dx = other.x - this.x;
+      const dy = other.y - this.y;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < perceptionSq) {
+        alignX += other.vx * 0.7;
+        alignY += other.vy * 0.7;
+
+        cohesionX += other.x;
+        cohesionY += other.y;
+
+        if (distSq < 60) {
+          separationX -= dx;
+          separationY -= dy;
+        }
+
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      alignX /= count;
+      alignY /= count;
+      cohesionX /= count;
+      cohesionY /= count;
+
+      this.vx += (alignX - this.vx) * 0.05;
+      this.vy += (alignY - this.vy) * 0.05;
+
+      this.vx += (cohesionX - this.x) * 0.001;
+      this.vy += (cohesionY - this.y) * 0.001;
+
+      this.vx += separationX * 0.02;
+      this.vy += separationY * 0.02;
+    }
+
+    const globalPull = 0.00008;
+    this.vx += (width / 2 - this.x) * globalPull;
+    this.vy += (height / 2 - this.y) * globalPull;
+
+    for (let field of fields) {
+      const dx = field.x - this.x;
+      const dy = field.y - this.y;
+      const distSq = dx * dx + dy * dy;
+      const rSq = field.radius * field.radius;
+
+      if (distSq < rSq) {
+        const falloff = 1 - distSq / rSq;
+        const influence = field.strength * falloff * 0.0004;
+        this.vx += dx * influence;
+        this.vy += dy * influence;
+      }
+    }
+
+    const windX = Math.sin(this.y * 0.002 + time) * 0.25;
+    const windY = Math.cos(this.x * 0.002 - time) * 0.25;
+    this.vx += windX * 0.02;
+    this.vy += windY * 0.02;
+
+    const speedSq = this.vx * this.vx + this.vy * this.vy;
+    const maxSpeed = 4;
+
+    if (speedSq > maxSpeed * maxSpeed) {
+      const scale = maxSpeed / Math.sqrt(speedSq);
+      this.vx *= scale;
+      this.vy *= scale;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
+  draw() {
+    ctx.fillRect(this.x | 0, this.y | 0, 1, 1);
+  }
+}
+
+for (let i = 0; i < BOID_COUNT; i++) {
+  boids.push(new Boid());
+}
+
+function animate() {
+  ctx.fillStyle = "#333635";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "white";
+
+  frame++;
+  updateFields();
+  buildGrid();
+
+  for (let i = 0; i < boids.length; i++) {
+    if (i % 4 === frame % 4) boids[i].update();
+    boids[i].draw();
+  }
+
+  time += 0.003;
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+</body>
+</html>
