@@ -1,4 +1,5 @@
-videos/video1.mp4
+video/video1.mp4
 audio/audio2.mp3
 pdf/pdf1.pdf
 imagem/foto1.jpg
+
