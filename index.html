@@ -15,28 +15,21 @@ html, body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     color: white;
+}
+
+#bgCanvas {
+    position: fixed;
+    inset: 1;
+    z-index: 1;
     background: #333635;
 }
 
-/* BACKGROUND */
-#backgroundLayer {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-}
-
-#backgroundLayer canvas {
-    display: block;
-}
-
-/* GAME */
 #mainLayer {
     position: relative;
     z-index: 1;
-    height: 100%;
     display: flex;
     flex-direction: column;
-    background: transparent;
+    height: 100%;
 }
 
 header {
@@ -69,11 +62,6 @@ header {
     overflow: hidden;
     opacity: 1;
     transition: opacity 0.6s ease;
-    background: transparent;
-}
-#contentDisplay iframe {
-    border: none;
-    background: transparent;
 }
 
 #contentDisplay.fade-out { opacity: 0; }
@@ -81,51 +69,42 @@ header {
 #contentDisplay img,
 #contentDisplay video,
 #contentDisplay audio,
-#contentDisplay iframe,
-#contentDisplay embed {
+#contentDisplay iframe {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
 }
 
-#contentDisplay video,
-#contentDisplay audio {
-    pointer-events: none;
-}
-
 #revealBtn {
     width: clamp(40px, 7vw, 75px);
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, opacity 0.3s ease;
 }
 
 #revealBtn:hover { transform: translateY(-3px); }
 #revealBtn:active { transform: scale(0.9); }
 
-video::-webkit-media-controls,
-video::-webkit-media-controls-enclosure {
-    display: none !important;
-}
 </style>
 </head>
 
 <body>
 
-<div id="backgroundLayer">
-<canvas id="canvas"></canvas>
-</div>
+<canvas id="bgCanvas"></canvas>
 
 <div id="mainLayer">
 
 <header>
-<img id="headerLogo"
-src="ativo/dancalogo.png">
+    <img id="headerLogo"
+         src="https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/ativo/dancalogo.png"
+         alt="DANÇA">
 </header>
 
 <div id="gameContainer">
-<div id="contentDisplay"></div>
-<img id="revealBtn"
-src="ativo/botao.png">
+    <div id="contentDisplay"></div>
+
+    <img id="revealBtn"
+         src="https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/ativo/botao.png"
+         alt="Reveal">
 </div>
 
 </div>
@@ -133,15 +112,208 @@ src="ativo/botao.png">
 <script>
 
 /* ===========================
-   ===== BACKGROUND CODE =====
-   EXACT ORIGINAL BEHAVIOR
+   ======= GAME LOGIC ========
 =========================== */
 
-const canvas = document.getElementById("canvas");
+const sheetURL = "https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/links.txt";
+
+let links = [];
+let deck = [];
+let isLoaded = false;
+
+document.getElementById("revealBtn").addEventListener("click", loadNextFromDeck);
+
+/* ===========================
+   ===== SMART PRELOADER =====
+=========================== */
+
+const PRELOAD_AHEAD_DEFAULT = 6;
+const MAX_CONCURRENT = 3;
+const MAX_CACHE_SIZE = 25;
+
+let preloadCache = new Map();
+let preloadQueue = [];
+let activeLoads = 0;
+
+function getAdaptivePreloadCount() {
+    const conn = navigator.connection;
+    if (!conn) return PRELOAD_AHEAD_DEFAULT;
+    if (conn.saveData) return 2;
+
+    switch (conn.effectiveType) {
+        case "slow-2g":
+        case "2g": return 1;
+        case "3g": return 3;
+        default: return PRELOAD_AHEAD_DEFAULT;
+    }
+}
+
+function preloadUpcoming() {
+    const count = getAdaptivePreloadCount();
+    const upcoming = deck.slice(-count);
+
+    upcoming.forEach(url => {
+        if (!url) return;
+        if (preloadCache.has(url)) return;
+        if (preloadQueue.includes(url)) return;
+        if (!url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) return;
+
+        preloadQueue.push(url);
+    });
+
+    processQueue();
+}
+
+function processQueue() {
+    while (activeLoads < MAX_CONCURRENT && preloadQueue.length > 0) {
+        const url = preloadQueue.shift();
+        loadAsset(url);
+    }
+}
+
+async function loadAsset(url) {
+    activeLoads++;
+
+    try {
+        const response = await fetch(url, { mode: "cors" });
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const img = new Image();
+        img.decoding = "async";
+        img.src = blobUrl;
+
+        preloadCache.set(url, { blobUrl, img });
+        trimCache();
+    } catch (e) {
+        console.warn("Preload failed:", url);
+    }
+
+    activeLoads--;
+    processQueue();
+}
+
+function trimCache() {
+    if (preloadCache.size <= MAX_CACHE_SIZE) return;
+
+    const firstKey = preloadCache.keys().next().value;
+    const entry = preloadCache.get(firstKey);
+
+    URL.revokeObjectURL(entry.blobUrl);
+    preloadCache.delete(firstKey);
+}
+
+/* ===========================
+   ===== SHEET FETCHING ======
+=========================== */
+
+async function fetchSheet() {
+    if (isLoaded) return;
+
+    const response = await fetch(sheetURL, { cache: "no-store" });
+    const text = await response.text();
+
+    const rows = text.split(/\r?\n/)
+                     .map(r => r.trim())
+                     .filter(Boolean);
+
+    links = rows.map(r => r.split("\t")[0]);
+    shuffleDeck();
+
+    isLoaded = true;
+    preloadUpcoming();
+}
+
+function shuffleDeck() {
+    deck = [...links];
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+}
+
+/* ===========================
+   ===== CONTENT LOADING =====
+=========================== */
+
+async function loadNextFromDeck() {
+
+    const display = document.getElementById("contentDisplay");
+    await fetchSheet();
+
+    if (deck.length === 0) {
+        shuffleDeck();
+        preloadUpcoming();
+    }
+
+    const nextLink = deck.pop();
+
+    display.classList.add("fade-out");
+
+    setTimeout(() => {
+        embedContent(nextLink);
+        display.classList.remove("fade-out");
+        preloadUpcoming();
+    }, 300);
+}
+
+function embedContent(url) {
+    const display = document.getElementById("contentDisplay");
+    display.innerHTML = "";
+
+    if (!url) return;
+
+    console.log("Embedding:", url);
+
+    // IMAGE
+    if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.loading = "lazy";
+        display.appendChild(img);
+        return;
+    }
+
+    // VIDEO
+    if (url.match(/\.(mp4|webm|ogg)$/i)) {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.maxWidth = "100%";
+        video.style.maxHeight = "100%";
+        display.appendChild(video);
+        return;
+    }
+
+    // AUDIO
+    if (url.match(/\.(mp3|wav|ogg)$/i)) {
+        const audio = document.createElement("audio");
+        audio.src = url;
+        audio.controls = true;
+        audio.autoplay = true;
+        display.appendChild(audio);
+        return;
+    }
+
+        // Fallback (iframe)
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.width = "100%";
+    iframe.height = "100%";
+    iframe.allowFullscreen = true;
+    display.appendChild(iframe);
+}
+
+
+
+/* ===========================
+   ===== AMEBA BACKGROUND =====
+=========================== */
+
+const canvas = document.getElementById("bgCanvas");
 const ctx = canvas.getContext("2d");
-ctx.fillStyle = "#ffffff";
-
-
 
 let width, height;
 function resize() {
@@ -162,19 +334,13 @@ const entrySide = Math.floor(Math.random() * 4);
 const perception = 40;
 const cellSize = perception;
 let grid = {};
-let cols, rows;
 
 function buildGrid() {
   grid = {};
-  cols = Math.ceil(width / cellSize);
-  rows = Math.ceil(height / cellSize);
-
-  for (let i = 0; i < boids.length; i++) {
-    const b = boids[i];
+  for (let b of boids) {
     const cx = Math.floor(b.x / cellSize);
     const cy = Math.floor(b.y / cellSize);
     const key = cx + "," + cy;
-
     if (!grid[key]) grid[key] = [];
     grid[key].push(b);
   }
@@ -183,7 +349,6 @@ function buildGrid() {
 function getNearbyBoids(boid) {
   const cx = Math.floor(boid.x / cellSize);
   const cy = Math.floor(boid.y / cellSize);
-
   let neighbors = [];
 
   for (let x = -1; x <= 1; x++) {
@@ -192,41 +357,13 @@ function getNearbyBoids(boid) {
       if (grid[key]) neighbors = neighbors.concat(grid[key]);
     }
   }
-
   return neighbors;
-}
-
-const fields = [];
-const MAX_FIELDS = 3;
-
-function spawnField() {
-  const field = {
-    x: Math.random() * width,
-    y: Math.random() * height,
-    radius: 250 + Math.random() * 400,
-    strength: (Math.random() > 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.5),
-    life: 500 + Math.random() * 400
-  };
-  fields.push(field);
-}
-
-function updateFields() {
-  if (fields.length < MAX_FIELDS && Math.random() < 0.01) {
-    spawnField();
-  }
-
-  for (let i = fields.length - 1; i >= 0; i--) {
-    fields[i].life--;
-    if (fields[i].life <= 0) fields.splice(i, 1);
-  }
 }
 
 class Boid {
   constructor() {
-
-    const clusterRadius = 260;
     const angle = Math.random() * Math.PI * 2;
-    const r = Math.random() * clusterRadius;
+    const r = Math.random() * 260;
     const far = 600;
 
     if (entrySide === 0) {
@@ -235,21 +372,18 @@ class Boid {
       this.vx = 3.5;
       this.vy = (Math.random() - 0.5) * 0.4;
     }
-
     if (entrySide === 1) {
       this.x = width + far + Math.cos(angle) * r;
       this.y = height / 2 + Math.sin(angle) * r;
       this.vx = -3.5;
       this.vy = (Math.random() - 0.5) * 0.4;
     }
-
     if (entrySide === 2) {
       this.x = width / 2 + Math.cos(angle) * r;
       this.y = -far + Math.sin(angle) * r;
       this.vx = (Math.random() - 0.5) * 0.4;
       this.vy = 3.5;
     }
-
     if (entrySide === 3) {
       this.x = width / 2 + Math.cos(angle) * r;
       this.y = height + far + Math.sin(angle) * r;
@@ -259,28 +393,22 @@ class Boid {
   }
 
   update() {
-
     let alignX = 0, alignY = 0;
-    let cohesionX = 1, cohesionY = 1;
+    let cohesionX = 0, cohesionY = 0;
     let separationX = 0, separationY = 0;
     let count = 0;
 
-    const perceptionSq = perception * perception;
     const neighbors = getNearbyBoids(this);
 
-    for (let i = 0; i < neighbors.length; i++) {
-      const other = neighbors[i];
+    for (let other of neighbors) {
       if (other === this) continue;
-
       const dx = other.x - this.x;
       const dy = other.y - this.y;
-      const distSq = dx * dx + dy * dy;
+      const distSq = dx*dx + dy*dy;
 
-      if (distSq < perceptionSq) {
-
-        alignX += other.vx * 0.7;
-        alignY += other.vy * 0.7;
-
+      if (distSq < perception*perception) {
+        alignX += other.vx;
+        alignY += other.vy;
         cohesionX += other.x;
         cohesionY += other.y;
 
@@ -288,7 +416,6 @@ class Boid {
           separationX -= dx;
           separationY -= dy;
         }
-
         count++;
       }
     }
@@ -301,61 +428,28 @@ class Boid {
 
       this.vx += (alignX - this.vx) * 0.05;
       this.vy += (alignY - this.vy) * 0.05;
-
       this.vx += (cohesionX - this.x) * 0.001;
       this.vy += (cohesionY - this.y) * 0.001;
-
       this.vx += separationX * 0.02;
       this.vy += separationY * 0.02;
     }
 
     const globalPull = 0.00008;
-    this.vx += (width / 2 - this.x) * globalPull;
-    this.vy += (height / 2 - this.y) * globalPull;
+    this.vx += (width/2 - this.x) * globalPull;
+    this.vy += (height/2 - this.y) * globalPull;
 
-    for (let f = 0; f < fields.length; f++) {
-      const field = fields[f];
-      const dx = field.x - this.x;
-      const dy = field.y - this.y;
-      const distSq = dx * dx + dy * dy;
-      const rSq = field.radius * field.radius;
-
-      if (distSq < rSq) {
-        const falloff = 1 - distSq / rSq;
-        const influence = field.strength * falloff * 0.0004;
-        this.vx += dx * influence;
-        this.vy += dy * influence;
-      }
+    const speed = Math.hypot(this.vx, this.vy);
+    if (speed > 4) {
+      this.vx *= 4/speed;
+      this.vy *= 4/speed;
     }
-
-    const windX = Math.sin(this.y * 0.002 + time) * 0.25;
-    const windY = Math.cos(this.x * 0.002 - time) * 0.25;
-    this.vx += windX * 0.02;
-    this.vy += windY * 0.02;
-
-    const speedSq = this.vx * this.vx + this.vy * this.vy;
-    const maxSpeed = 4;
-
-    if (speedSq > maxSpeed * maxSpeed) {
-      const scale = maxSpeed / Math.sqrt(speedSq);
-      this.vx *= scale;
-      this.vy *= scale;
-    }
-
-    const margin = 5;
-    const force = 0.2;
-
-    if (this.x < -margin) this.vx += force;
-    if (this.x > width + margin) this.vx -= force;
-    if (this.y < -margin) this.vy += force;
-    if (this.y > height + margin) this.vy -= force;
 
     this.x += this.vx;
     this.y += this.vy;
   }
 
   draw() {
-    ctx.fillRect(this.x | 0, this.y | 0, 1, 1);
+    ctx.fillRect(this.x|0, this.y|0, 1, 1);
   }
 }
 
@@ -364,16 +458,15 @@ for (let i = 0; i < BOID_COUNT; i++) {
 }
 
 function animate() {
- ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#333635";
+  ctx.fillRect(0,0,width,height);
+  ctx.fillStyle = "white";
 
   frame++;
-  updateFields();
   buildGrid();
 
   for (let i = 0; i < boids.length; i++) {
-    if (i % 4 === frame % 4) {
-      boids[i].update();
-    }
+    if (i % 4 === frame % 4) boids[i].update();
     boids[i].draw();
   }
 
@@ -381,98 +474,8 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-
-  time += 0.003;
-  requestAnimationFrame(animate);
-}
-
 animate();
-
-/* ===========================
-   ===== GAME CODE =====
-=========================== */
-
-const sheetURL = "links.txt";
-let links = [];
-let deck = [];
-let isLoaded = false;
-
-async function fetchSheet() {
-    if (isLoaded) return;
-
-    const response = await fetch(sheetURL + "?cacheBust=" + Date.now());
-    const text = await response.text();
-
-    links = text.split(/\r?\n/)
-                .map(r => r.trim())
-                .filter(r => r.length > 0);
-
-    shuffleDeck();
-    isLoaded = true;
-}
-
-function shuffleDeck() {
-    deck = [...links];
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-}
-
-document.getElementById("revealBtn").addEventListener("click", loadNextFromDeck);
-
-async function loadNextFromDeck() {
-    const display = document.getElementById("contentDisplay");
-
-    await fetchSheet();
-
-    if (deck.length === 0) shuffleDeck();
-
-    const nextLink = deck.pop();
-
-    display.classList.add("fade-out");
-
-    setTimeout(() => {
-        stopAllMedia();
-        embedContent(nextLink);
-        display.classList.remove("fade-out");
-    }, 300);
-}
-
-function stopAllMedia() {
-    const medias = document.querySelectorAll("video, audio");
-    medias.forEach(media => {
-        media.pause();
-        media.src = "";
-        media.load();
-    });
-}
-
-function embedContent(url) {
-    const display = document.getElementById("contentDisplay");
-    display.innerHTML = "";
-    const lower = url.toLowerCase();
-
-    if (lower.match(/\.(jpeg|jpg|png|gif|webp)$/)) {
-        const img = document.createElement("img");
-        img.src = url;
-        display.appendChild(img);
-        return;
-    }
-
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    display.appendChild(iframe);
-}
 
 </script>
 </body>
 </html>
-
-
-
-
-
-
