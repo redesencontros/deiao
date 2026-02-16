@@ -249,9 +249,10 @@ function embedContent(url) {
 
 
     // ===== PDF =====
-    if (lower.match(/\.pdf$/)) {
+   if (lower.match(/\.pdf$/)) {
     const iframe = document.createElement("iframe");
-    iframe.src = "https://docs.google.com/gview?embedded=1&url=" + encodeURIComponent(url);
+    iframe.src = url;
+    iframe.type = "application/pdf";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
@@ -504,6 +505,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
