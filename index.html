@@ -361,8 +361,7 @@ for (let i = 0; i < BOID_COUNT; i++) {
 }
 
 function animate() {
-  ctx.clearRect(0, 0, width, height); // <-- transparent clear
-  ctx.fillStyle = "white";
+ ctx.clearRect(0, 0, width, height);
 
   frame++;
   updateFields();
@@ -468,6 +467,7 @@ function embedContent(url) {
 </script>
 </body>
 </html>
+
 
 
 
