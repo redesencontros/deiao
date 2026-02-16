@@ -355,8 +355,7 @@ for (let i = 0; i < BOID_COUNT; i++) {
 }
 
 function animate() {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, width, height);
+  ctx.clearRect(0, 0, width, height); // <-- transparent clear
   ctx.fillStyle = "white";
 
   frame++;
@@ -369,6 +368,11 @@ function animate() {
     }
     boids[i].draw();
   }
+
+  time += 0.003;
+  requestAnimationFrame(animate);
+}
+
 
   time += 0.003;
   requestAnimationFrame(animate);
@@ -458,3 +462,4 @@ function embedContent(url) {
 </script>
 </body>
 </html>
+
