@@ -207,13 +207,57 @@ function embedContent(url) {
 
     if (!url) return;
 
-    if (url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+    const lower = url.toLowerCase();
+
+    // ===== IMAGE =====
+    if (lower.match(/\.(jpeg|jpg|png|gif|webp)$/)) {
         const img = document.createElement("img");
         img.src = url;
         display.appendChild(img);
         return;
     }
+
+    // ===== VIDEO =====
+    if (lower.match(/\.(mp4|webm|ogg)$/)) {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.maxWidth = "100%";
+        video.style.maxHeight = "100%";
+        display.appendChild(video);
+        return;
+    }
+
+    // ===== AUDIO =====
+    if (lower.match(/\.(mp3|wav|ogg)$/)) {
+        const audio = document.createElement("audio");
+        audio.src = url;
+        audio.controls = true;
+        audio.autoplay = true;
+        display.appendChild(audio);
+        return;
+    }
+
+    // ===== PDF =====
+    if (lower.match(/\.pdf$/)) {
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        display.appendChild(iframe);
+        return;
+    }
+
+    // ===== Fallback (iframe for anything else) =====
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    display.appendChild(iframe);
 }
+
 
 
 /* ===========================
@@ -450,6 +494,7 @@ animate();
 </script>
 </body>
 </html>
+
 
 
 
