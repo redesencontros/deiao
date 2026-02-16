@@ -15,11 +15,19 @@ html, body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     color: white;
-    background: black; /* temporary solid background */
+}
+
+/* ===== BACKGROUND LAYER ===== */
+#backgroundLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
 }
 
 /* ===== MAIN LAYER ===== */
 #mainLayer {
+    position: relative;
+    z-index: 1;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -89,11 +97,21 @@ video::-webkit-media-controls,
 video::-webkit-media-controls-enclosure {
     display: none !important;
 }
+
+canvas {
+    display: block;
+}
 </style>
 </head>
 
 <body>
 
+<!-- ================= BACKGROUND ================= -->
+<div id="backgroundLayer">
+<canvas id="canvas"></canvas>
+</div>
+
+<!-- ================= GAME ================= -->
 <div id="mainLayer">
 
 <header>
@@ -110,9 +128,259 @@ src="https://raw.githubusercontent.com/redesencontros/deiao-dados/main/button-ic
 </div>
 
 <script>
+/* ===========================
+   ===== BACKGROUND CODE =====
+   (UNCHANGED)
+=========================== */
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let width, height;
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const BOID_COUNT = 3000;
+const boids = [];
+
+let time = 0;
+let frame = 0;
+
+const entrySide = Math.floor(Math.random() * 4);
+
+const perception = 40;
+const cellSize = perception;
+let grid = {};
+let cols, rows;
+
+function buildGrid() {
+  grid = {};
+  cols = Math.ceil(width / cellSize);
+  rows = Math.ceil(height / cellSize);
+
+  for (let i = 0; i < boids.length; i++) {
+    const b = boids[i];
+    const cx = Math.floor(b.x / cellSize);
+    const cy = Math.floor(b.y / cellSize);
+    const key = cx + "," + cy;
+
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(b);
+  }
+}
+
+function getNearbyBoids(boid) {
+  const cx = Math.floor(boid.x / cellSize);
+  const cy = Math.floor(boid.y / cellSize);
+
+  let neighbors = [];
+
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      const key = (cx + x) + "," + (cy + y);
+      if (grid[key]) {
+        neighbors = neighbors.concat(grid[key]);
+      }
+    }
+  }
+
+  return neighbors;
+}
+
+const fields = [];
+const MAX_FIELDS = 3;
+
+function spawnField() {
+  const field = {
+    x: Math.random() * width,
+    y: Math.random() * height,
+    radius: 250 + Math.random() * 400,
+    strength: (Math.random() > 0.5 ? 1 : -1) * (0.08 + Math.random() * 0.5),
+    life: 500 + Math.random() * 400
+  };
+  fields.push(field);
+}
+
+function updateFields() {
+  if (fields.length < MAX_FIELDS && Math.random() < 0.01) {
+    spawnField();
+  }
+
+  for (let i = fields.length - 1; i >= 0; i--) {
+    fields[i].life--;
+    if (fields[i].life <= 0) {
+      fields.splice(i, 1);
+    }
+  }
+}
+
+class Boid {
+  constructor() {
+    const clusterRadius = 260;
+    const angle = Math.random() * Math.PI * 2;
+    const r = Math.random() * clusterRadius;
+    const far = 600;
+
+    if (entrySide === 0) {
+      this.x = -far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = 3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 1) {
+      this.x = width + far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = -3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 2) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = -far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = 3.5;
+    }
+
+    if (entrySide === 3) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = height + far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = -3.5;
+    }
+  }
+
+  update() {
+    let alignX = 0, alignY = 0;
+    let cohesionX = 1, cohesionY = 1;
+    let separationX = 0, separationY = 0;
+    let count = 0;
+
+    const perceptionSq = perception * perception;
+    const neighbors = getNearbyBoids(this);
+
+    for (let i = 0; i < neighbors.length; i++) {
+      const other = neighbors[i];
+      if (other === this) continue;
+
+      const dx = other.x - this.x;
+      const dy = other.y - this.y;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < perceptionSq) {
+        alignX += other.vx * 0.7;
+        alignY += other.vy * 0.7;
+        cohesionX += other.x;
+        cohesionY += other.y;
+
+        if (distSq < 60) {
+          separationX -= dx;
+          separationY -= dy;
+        }
+
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      alignX /= count;
+      alignY /= count;
+      cohesionX /= count;
+      cohesionY /= count;
+
+      this.vx += (alignX - this.vx) * 0.05;
+      this.vy += (alignY - this.vy) * 0.05;
+
+      this.vx += (cohesionX - this.x) * 0.001;
+      this.vy += (cohesionY - this.y) * 0.001;
+
+      this.vx += separationX * 0.02;
+      this.vy += separationY * 0.02;
+    }
+
+    const globalPull = 0.00008;
+    this.vx += (width / 2 - this.x) * globalPull;
+    this.vy += (height / 2 - this.y) * globalPull;
+
+    for (let f = 0; f < fields.length; f++) {
+      const field = fields[f];
+      const dx = field.x - this.x;
+      const dy = field.y - this.y;
+      const distSq = dx * dx + dy * dy;
+      const rSq = field.radius * field.radius;
+
+      if (distSq < rSq) {
+        const falloff = 1 - distSq / rSq;
+        const influence = field.strength * falloff * 0.0004;
+        this.vx += dx * influence;
+        this.vy += dy * influence;
+      }
+    }
+
+    const windX = Math.sin(this.y * 0.002 + time) * 0.25;
+    const windY = Math.cos(this.x * 0.002 - time) * 0.25;
+    this.vx += windX * 0.02;
+    this.vy += windY * 0.02;
+
+    const speedSq = this.vx * this.vx + this.vy * this.vy;
+    const maxSpeed = 4;
+
+    if (speedSq > maxSpeed * maxSpeed) {
+      const scale = maxSpeed / Math.sqrt(speedSq);
+      this.vx *= scale;
+      this.vy *= scale;
+    }
+
+    const margin = 5;
+    const force = 0.2;
+
+    if (this.x < -margin) this.vx += force;
+    if (this.x > width + margin) this.vx -= force;
+    if (this.y < -margin) this.vy += force;
+    if (this.y > height + margin) this.vy -= force;
+
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
+  draw() {
+    ctx.fillRect(this.x | 0, this.y | 0, 1, 1);
+  }
+}
+
+for (let i = 0; i < BOID_COUNT; i++) {
+  boids.push(new Boid());
+}
+
+function animate() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "white";
+
+  frame++;
+  updateFields();
+  buildGrid();
+
+  for (let i = 0; i < boids.length; i++) {
+    if (i % 4 === frame % 4) {
+      boids[i].update();
+    }
+    boids[i].draw();
+  }
+
+  time += 0.003;
+  requestAnimationFrame(animate);
+}
+
+animate();
 
 /* ===========================
-   ===== DECK SYSTEM =====
+   ===== GAME CODE =====
+   (UNCHANGED)
 =========================== */
 
 const sheetURL = "links.txt";
@@ -226,7 +494,7 @@ function embedContent(url) {
     iframe.style.height = "100%";
     display.appendChild(iframe);
 }
-
 </script>
+
 </body>
 </html>
