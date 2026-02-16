@@ -264,18 +264,21 @@ function embedContent(url) {
     }
 
     /* ===== AUDIO ===== */
-    if (lower.match(/\.(mp3|wav|ogg)$/)) {
-        const audio = document.createElement("audio");
-        audio.src = url;
-        audio.autoplay = true;
-        audio.preload = "auto";
-        audio.controls = false;
-        audio.style.pointerEvents = "none";
+   /* ===== AUDIO ===== */
+if (lower.match(/\.(mp3|wav|ogg)$/)) {
+    const audio = new Audio();
+    audio.src = url;
+    audio.autoplay = true;
+    audio.preload = "auto";
+    audio.controls = false;
+    audio.style.display = "none"; // invisible completely
 
-        display.appendChild(audio);
-        audio.play().catch(() => {});
-        return;
-    }
+    display.appendChild(audio);
+
+    audio.play().catch(() => {});
+    return;
+}
+
 
     /* ===== PDF ===== */
     if (lower.match(/\.pdf$/)) {
@@ -523,4 +526,5 @@ animate();
 </script>
 </body>
 </html>
+
 
