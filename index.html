@@ -188,11 +188,23 @@ function stopAllMedia() {
         try {
             media.pause();
             media.currentTime = 0;
+
+            // Remove source properly
+            media.src = "";
             media.removeAttribute("src");
+
+            // Force unload
             media.load();
+
+            // Remove from DOM
+            if (media.parentNode) {
+                media.parentNode.removeChild(media);
+            }
+
         } catch (e) {}
     });
 }
+
 
 document.getElementById("revealBtn").addEventListener("click", loadNextFromDeck);
 
@@ -511,3 +523,4 @@ animate();
 </script>
 </body>
 </html>
+
