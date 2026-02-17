@@ -6,50 +6,14 @@
 <title>DANÇA é isso aqui, ó</title>
 
 <style>
-
-/* ================= CUSTOM FONT ================= */
-
-@font-face {
-    font-family: "LemonTuesday";
-    src: url("https://redesencontros.github.io/dancaeissoaquio/assets/LEMONTUESDAY.woff2") format("woff2");
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* ================= BASE ================= */
-
 html,body{
 margin:0;
 padding:0;
 overflow:hidden;
-background:#333635;
+background:#000;
 font-family:Arial, sans-serif;
 color:white;
 }
-
-/* ================= TYPOGRAPHY ================= */
-
-#contentDisplay{
-width:min(95%,1000px);
-height:60vh;
-display:flex;
-align-items:center;
-justify-content:center;
-text-align:center;
-padding:2rem;
-visibility:hidden;
-
-font-family:"LemonTuesday", sans-serif;
-font-size:clamp(2rem,5vw,4rem);
-line-height:1.2;
-letter-spacing:0.02em;
-}
-
-/* ================= MEDIA ================= */
-
-video::-webkit-media-controls{display:none!important;}
-audio::-webkit-media-controls{display:none!important;}
 
 #bgCanvas{
 position:fixed;
@@ -84,11 +48,15 @@ justify-content:center;
 gap:4vh;
 }
 
+#contentDisplay{
+visibility:hidden;
+font-size:clamp(2rem,5vw,4rem);
+}
+
 #revealBtn{
 width:clamp(40px,7vw,75px);
 cursor:pointer;
 }
-
 </style>
 </head>
 <body>
@@ -110,67 +78,179 @@ src="https://redesencontros.github.io/dancaeissoaquio/assets/button.png">
 
 <script>
 
-/* ================= SAFE START ================= */
+/* ================= BUTTON ================= */
 
-window.addEventListener("DOMContentLoaded", () => {
+const btn = document.getElementById("revealBtn");
+const content = document.getElementById("contentDisplay");
 
-    // Ensure font load does not block entire app
-    if (document.fonts) {
-        document.fonts.load('1em "LemonTuesday"')
-            .then(() => {
-                document.getElementById("contentDisplay").style.visibility = "visible";
-            })
-            .catch(() => {
-                document.getElementById("contentDisplay").style.visibility = "visible";
-            });
-    } else {
-        document.getElementById("contentDisplay").style.visibility = "visible";
-    }
-
-    /* ================= BUTTON ================= */
-
-    const btn = document.getElementById("revealBtn");
-    if (btn) {
-        btn.addEventListener("click", () => {
-            console.log("Button clicked");
-            // Your original reveal logic stays here
-        });
-    }
-
-    /* ================= BACKGROUND (SAFE INIT) ================= */
-
-    const canvas = document.getElementById("bgCanvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const gl = canvas.getContext("webgl", { alpha: false });
-
-    if (!gl) {
-        console.error("WebGL not supported");
-        return;
-    }
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.2, 0.21, 0.2, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    /* =====================================================
-       ================= GPU MURMURATION ===================
-       (PUT YOUR ORIGINAL WEBGL CODE BELOW THIS LINE)
-    ===================================================== */
-
+btn.addEventListener("click", () => {
+  content.style.visibility = "visible";
+  content.textContent = "DANÇA!";
 });
 
+/* ================= MURMURATION ================= */
 
-/* Resize handling */
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
 
-window.addEventListener("resize", () => {
-    const canvas = document.getElementById("bgCanvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+let width, height;
+
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const BOID_COUNT = 3000;
+const boids = [];
+
+let time = 0;
+let frame = 0;
+
+const entrySide = Math.floor(Math.random() * 4);
+
+const perception = 40;
+const cellSize = perception;
+let grid = {};
+
+function buildGrid() {
+  grid = {};
+  for (let i = 0; i < boids.length; i++) {
+    const b = boids[i];
+    const cx = Math.floor(b.x / cellSize);
+    const cy = Math.floor(b.y / cellSize);
+    const key = cx + "," + cy;
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(b);
+  }
+}
+
+function getNearbyBoids(boid) {
+  const cx = Math.floor(boid.x / cellSize);
+  const cy = Math.floor(boid.y / cellSize);
+  let neighbors = [];
+
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      const key = (cx + x) + "," + (cy + y);
+      if (grid[key]) neighbors = neighbors.concat(grid[key]);
+    }
+  }
+  return neighbors;
+}
+
+class Boid {
+  constructor() {
+    const clusterRadius = 260;
+    const angle = Math.random() * Math.PI * 2;
+    const r = Math.random() * clusterRadius;
+    const far = 600;
+
+    if (entrySide === 0) {
+      this.x = -far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = 3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 1) {
+      this.x = width + far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = -3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+
+    if (entrySide === 2) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = -far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = 3.5;
+    }
+
+    if (entrySide === 3) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = height + far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = -3.5;
+    }
+  }
+
+  update() {
+    let alignX = 0, alignY = 0;
+    let cohesionX = 0, cohesionY = 0;
+    let separationX = 0, separationY = 0;
+    let count = 0;
+
+    const perceptionSq = perception * perception;
+    const neighbors = getNearbyBoids(this);
+
+    for (let other of neighbors) {
+      if (other === this) continue;
+
+      const dx = other.x - this.x;
+      const dy = other.y - this.y;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < perceptionSq) {
+        alignX += other.vx;
+        alignY += other.vy;
+        cohesionX += other.x;
+        cohesionY += other.y;
+
+        if (distSq < 60) {
+          separationX -= dx;
+          separationY -= dy;
+        }
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      alignX /= count;
+      alignY /= count;
+      cohesionX /= count;
+      cohesionY /= count;
+
+      this.vx += (alignX - this.vx) * 0.05;
+      this.vy += (alignY - this.vy) * 0.05;
+      this.vx += (cohesionX - this.x) * 0.001;
+      this.vy += (cohesionY - this.y) * 0.001;
+      this.vx += separationX * 0.02;
+      this.vy += separationY * 0.02;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+
+  draw() {
+    ctx.fillRect(this.x | 0, this.y | 0, 1, 1);
+  }
+}
+
+for (let i = 0; i < BOID_COUNT; i++) {
+  boids.push(new Boid());
+}
+
+function animate() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "white";
+
+  frame++;
+  buildGrid();
+
+  for (let i = 0; i < boids.length; i++) {
+    if (i % 4 === frame % 4) boids[i].update();
+    boids[i].draw();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
 
 </script>
-
 </body>
 </html>
