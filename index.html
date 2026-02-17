@@ -181,7 +181,7 @@ gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 /* ---------- BOIDS (UNCHANGED LOGIC) ---------- */
 
 const isMobile = window.innerWidth < 768;
-const BOID_COUNT = isMobile ? 50 : 2000;
+const BOID_COUNT = isMobile ? 200 : 2000;
 const boids = [];
 let frame = 0;
 const perception = 20;
@@ -443,4 +443,3 @@ function showContent(url) {
 
 </body>
 </html>
-
