@@ -419,7 +419,7 @@ function showContent(url) {
 }
 
 
-    else if (lower.match(/\.(mp3|wav|ogg)$/)) {
+    else if (lower.match(/\.(mp3|wav|ogg|m4a)$/)) {
         const audio = new Audio(url);
         audio.loop = true;
         audio.play();
@@ -443,5 +443,6 @@ function showContent(url) {
 
 </body>
 </html>
+
 
 
