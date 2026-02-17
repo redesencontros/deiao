@@ -394,6 +394,8 @@ function showContent(url) {
 
     const lower = url.toLowerCase();
 
+    console.log("Processing:", lower);
+    
     if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
         const img = document.createElement("img");
         img.src = url;
@@ -443,6 +445,7 @@ function showContent(url) {
 
 </body>
 </html>
+
 
 
 
