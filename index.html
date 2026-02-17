@@ -1,120 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DANÇA é isso aqui, ó</title>
 
 <style>
-html,body{
-margin:0;
-padding:0;
-overflow:hidden;
-background:#000;
-font-family:Arial, sans-serif;
-color:white;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-#bgCanvas{
-position:fixed;
-inset:0;
-z-index:0;
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: sans-serif;
+    background: transparent;
 }
 
-#mainLayer{
-position:relative;
-z-index:1;
-display:flex;
-flex-direction:column;
-height:100vh;
+/* BACKGROUND */
+#backgroundApp {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: #333635;
 }
 
-header{
-display:flex;
-justify-content:center;
-padding:2vh 0;
+#backgroundApp canvas {
+    display: block;
 }
 
-#headerLogo{
-width:clamp(150px,30vw,300px);
+/* GAME LAYER */
+#gameLayer {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-#gameContainer{
-flex:1;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:4vh;
+/* HEADER */
+#header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 3vh;
+    flex-shrink: 0;
 }
 
-#contentDisplay{
-visibility:hidden;
-font-size:clamp(2rem,5vw,4rem);
+#header img {
+    width: clamp(100px, 40vw, 300px);
+    height: auto;
 }
 
-#revealBtn{
-width:clamp(40px,7vw,75px);
-cursor:pointer;
+/* CONTENT */
+#contentDisplay {
+    flex: 1; /* takes remaining vertical space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2vh 2vw;
+    overflow: hidden;
 }
+
+#contentDisplay img,
+#contentDisplay video,
+#contentDisplay div {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+
+/* BUTTON */
+#gameButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 4vh;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+#gameButton img {
+    width: clamp(50px, 10vw, 100px);
+    height: auto;
+}
+
 </style>
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
-
-<div id="mainLayer">
-<header>
-<img id="headerLogo"
-src="https://redesencontros.github.io/dancaeissoaquio/assets/header.png">
-</header>
-
-<div id="gameContainer">
-<div id="contentDisplay"></div>
-<img id="revealBtn"
-src="https://redesencontros.github.io/dancaeissoaquio/assets/button.png">
+<!-- BACKGROUND -->
+<div id="backgroundApp">
+    <canvas id="canvas"></canvas>
 </div>
+
+<!-- GAME LAYER -->
+<div id="gameLayer">
+
+    <div id="header">
+        <img id="headerImage">
+    </div>
+
+    <div id="contentDisplay"></div>
+
+    <button id="gameButton">
+        <img id="buttonImage">
+    </button>
+
 </div>
 
 <script>
+/* =========================
+   AMEBA BOIDS BACKGROUND (WEBGL RENDER)
+========================= */
 
-/* ================= BUTTON ================= */
-
-const btn = document.getElementById("revealBtn");
-const content = document.getElementById("contentDisplay");
-
-btn.addEventListener("click", () => {
-  content.style.visibility = "visible";
-  content.textContent = "DANÇA é isso aqui, ó";
-});
-
-
-/* ================= IMPROVED MURMURATION ================= */
-
-const canvas = document.getElementById("bgCanvas");
-const ctx = canvas.getContext("2d", { alpha: false });
+const canvas = document.getElementById("canvas");
+const gl = canvas.getContext("webgl");
 
 let width, height;
 
 function resize() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
+  gl.viewport(0, 0, width, height);
 }
 window.addEventListener("resize", resize);
 resize();
 
-const BOID_COUNT = 2500;
-const boids = [];
+/* ---------- SHADERS ---------- */
 
-const perception = 35;
-const perceptionSq = perception * perception;
+const vertexShaderSource = `
+attribute vec2 a_position;
+uniform vec2 u_resolution;
+
+void main() {
+  vec2 zeroToOne = a_position / u_resolution;
+  vec2 zeroToTwo = zeroToOne * 2.0;
+  vec2 clipSpace = zeroToTwo - 1.0;
+  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+  gl_PointSize = 1.0;
+}
+`;
+
+const fragmentShaderSource = `
+precision mediump float;
+void main() {
+  gl_FragColor = vec4(1, 1, 1, 1);
+}
+`;
+
+function createShader(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  return shader;
+}
+
+const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
+const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+const program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+gl.useProgram(program);
+
+const positionLocation = gl.getAttribLocation(program, "a_position");
+const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+gl.enableVertexAttribArray(positionLocation);
+gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+/* ---------- BOIDS (UNCHANGED LOGIC) ---------- */
+
+const isMobile = window.innerWidth < 768;
+const BOID_COUNT = isMobile ? 500 : 2000;
+const boids = [];
+let frame = 0;
+const perception = 30;
+const cellSize = perception;
+let grid = {};
+
+function buildGrid() {
+  grid = {};
+  for (let i = 0; i < boids.length; i++) {
+    const b = boids[i];
+    const cx = Math.floor(b.x / cellSize);
+    const cy = Math.floor(b.y / cellSize);
+    const key = cx + "," + cy;
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(b);
+  }
+}
+
+function getNearbyBoids(boid) {
+  const cx = Math.floor(boid.x / cellSize);
+  const cy = Math.floor(boid.y / cellSize);
+  let neighbors = [];
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      const key = (cx + x) + "," + (cy + y);
+      if (grid[key]) neighbors = neighbors.concat(grid[key]);
+    }
+  }
+  return neighbors;
+}
+
+const entrySide = Math.floor(Math.random() * 4);
 
 class Boid {
   constructor() {
-    this.x = Math.random() * width;
-    this.y = Math.random() * height;
-    this.vx = (Math.random() - 0.5) * 2;
-    this.vy = (Math.random() - 0.5) * 2;
+    const clusterRadius = 260;
+    const angle = Math.random() * Math.PI * 2;
+    const r = Math.random() * clusterRadius;
+    const far = 600;
+
+    if (entrySide === 0) {
+      this.x = -far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = 3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+    if (entrySide === 1) {
+      this.x = width + far + Math.cos(angle) * r;
+      this.y = height / 2 + Math.sin(angle) * r;
+      this.vx = -3.5;
+      this.vy = (Math.random() - 0.5) * 0.4;
+    }
+    if (entrySide === 2) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = -far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = 3.5;
+    }
+    if (entrySide === 3) {
+      this.x = width / 2 + Math.cos(angle) * r;
+      this.y = height + far + Math.sin(angle) * r;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = -3.5;
+    }
   }
 
   update() {
@@ -123,9 +254,11 @@ class Boid {
     let separationX = 0, separationY = 0;
     let count = 0;
 
-    for (let other of boids) {
-      if (other === this) continue;
+    const perceptionSq = perception * perception;
+    const neighbors = getNearbyBoids(this);
 
+    for (let other of neighbors) {
+      if (other === this) continue;
       const dx = other.x - this.x;
       const dy = other.y - this.y;
       const distSq = dx * dx + dy * dy;
@@ -136,11 +269,10 @@ class Boid {
         cohesionX += other.x;
         cohesionY += other.y;
 
-        if (distSq < 100) {
+        if (distSq < 60) {
           separationX -= dx;
           separationY -= dy;
         }
-
         count++;
       }
     }
@@ -153,28 +285,26 @@ class Boid {
 
       this.vx += (alignX - this.vx) * 0.05;
       this.vy += (alignY - this.vy) * 0.05;
-      this.vx += (cohesionX - this.x) * 0.0008;
-      this.vy += (cohesionY - this.y) * 0.0008;
-      this.vx += separationX * 0.01;
-      this.vy += separationY * 0.01;
+      this.vx += (cohesionX - this.x) * 0.0015;
+      this.vy += (cohesionY - this.y) * 0.0015;
+      this.vx += separationX * 0.02;
+      this.vy += separationY * 0.02;
     }
 
-    const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
-    const max = 2;
+    const globalPull = 0.00009;
+    this.vx += (width / 2 - this.x) * globalPull;
+    this.vy += (height / 2 - this.y) * globalPull;
 
-    if (speed > max) {
-      this.vx = (this.vx / speed) * max;
-      this.vy = (this.vy / speed) * max;
+    const speedSq = this.vx * this.vx + this.vy * this.vy;
+    const maxSpeed = 3.5;
+    if (speedSq > maxSpeed * maxSpeed) {
+      const scale = maxSpeed / Math.sqrt(speedSq);
+      this.vx *= scale;
+      this.vy *= scale;
     }
 
     this.x += this.vx;
     this.y += this.vy;
-
-    // wrap screen
-    if (this.x < 0) this.x = width;
-    if (this.x > width) this.x = 0;
-    if (this.y < 0) this.y = height;
-    if (this.y > height) this.y = 0;
   }
 }
 
@@ -182,24 +312,134 @@ for (let i = 0; i < BOID_COUNT; i++) {
   boids.push(new Boid());
 }
 
+const positions = new Float32Array(BOID_COUNT * 2);
+
 function animate() {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, width, height);
+  frame++;
 
-  ctx.fillStyle = "white";
+  buildGrid();
 
-  for (let b of boids) {
-    b.update();
-    ctx.fillRect(b.x, b.y, 1.5, 1.5);
+  for (let i = 0; i < boids.length; i++) {
+    if (i % 4 === frame % 5) boids[i].update();
+    positions[i * 2] = boids[i].x;
+    positions[i * 2 + 1] = boids[i].y;
   }
+
+  gl.clearColor(0.2, 0.212, 0.208, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.uniform2f(resolutionLocation, width, height);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
+  gl.drawArrays(gl.POINTS, 0, BOID_COUNT);
 
   requestAnimationFrame(animate);
 }
 
 animate();
 
+/* =========================
+   GAME LOGIC
+========================= */
+
+const CONFIG = {
+    headerImage: "https://redesencontros.github.io/dancaeissoaquio/assets/header.png",
+    buttonImage: "https://redesencontros.github.io/dancaeissoaquio/assets/button.png",
+    buttonSound: "https://redesencontros.github.io/dancaeissoaquio/assets/button-sound.mp3",
+    contentListTxt: "https://redesencontros.github.io/dancaeissoaquio/content-list.txt"
+};
+
+let deck = [];
+let currentIndex = 0;
+let currentAudio = null;
+let buttonClickSound = new Audio(CONFIG.buttonSound);
+
+document.getElementById("headerImage").src = CONFIG.headerImage;
+document.getElementById("buttonImage").src = CONFIG.buttonImage;
+
+fetch(CONFIG.contentListTxt)
+    .then(res => res.text())
+    .then(text => {
+        deck = text.split("\n").map(l => l.trim()).filter(l => l);
+        shuffle(deck);
+    });
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+document.getElementById("gameButton").addEventListener("click", () => {
+
+    buttonClickSound.currentTime = 0;
+    buttonClickSound.play();
+
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+
+    if (currentIndex >= deck.length) {
+        shuffle(deck);
+        currentIndex = 0;
+    }
+
+    showContent(deck[currentIndex++]);
+});
+
+function showContent(url) {
+    const display = document.getElementById("contentDisplay");
+    display.innerHTML = "";
+
+    const lower = url.toLowerCase();
+
+    if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+        const img = document.createElement("img");
+        img.src = url;
+        display.appendChild(img);
+    }
+
+    else if (lower.match(/\.(mp4|webm)$/)) {
+    const video = document.createElement("video");
+    video.src = url;
+    video.loop = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.autoplay = true;     // keep this
+    video.muted = false;       // allow sound
+    video.preload = "auto";
+
+    display.appendChild(video);
+
+    // Play explicitly after adding to DOM
+    video.play().catch(err => {
+        console.log("Autoplay blocked:", err);
+    });
+}
+
+
+    else if (lower.match(/\.(mp3|wav|ogg)$/)) {
+        const audio = new Audio(url);
+        audio.loop = true;
+        audio.play();
+        currentAudio = audio;
+    }
+
+    else if (lower.match(/\.txt$/)) {
+        fetch(url)
+            .then(res => res.text())
+            .then(text => {
+                const div = document.createElement("div");
+                div.style.color = "white";
+                div.style.textAlign = "center";
+                div.style.padding = "20px";
+                div.innerText = text;
+                display.appendChild(div);
+            });
+    }
+}
 </script>
 
 </body>
 </html>
-
