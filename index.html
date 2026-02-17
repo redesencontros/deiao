@@ -329,14 +329,15 @@ function animate() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.uniform2f(resolutionLocation, width, height);
-  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, positions.byteLength, gl.DYNAMIC_DRAW);
   gl.drawArrays(gl.POINTS, 0, BOID_COUNT);
 
   requestAnimationFrame(animate);
 }
 
 animate();
-
+gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
+}
 /* =========================
    GAME LOGIC
 ========================= */
@@ -443,5 +444,6 @@ function showContent(url) {
 
 </body>
 </html>
+
 
 
