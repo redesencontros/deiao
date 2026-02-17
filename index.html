@@ -1,109 +1,312 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DANÇA é isso aqui, ó</title>
 
 <style>
-* { box-sizing: border-box; }
-
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-    background: black;
-    font-family: sans-serif;
+html,body{
+margin:0;
+padding:0;
+overflow:hidden;
+background:#333635;
+font-family:Arial;
+color:white;
 }
 
-#mediaContainer {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+video::-webkit-media-controls{display:none!important;}
+audio::-webkit-media-controls{display:none!important;}
+
+#bgCanvas{
+position:fixed;
+inset:0;
+z-index:0;
 }
 
-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
+#mainLayer{
+position:relative;
+z-index:1;
+display:flex;
+flex-direction:column;
+height:100vh;
 }
 
-#fetchBtn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10;
-    padding: 12px 24px;
-    font-size: 16px;
-    cursor: pointer;
+header{
+display:flex;
+justify-content:center;
+padding:2vh 0;
+}
+
+#headerLogo{
+width:clamp(150px,30vw,300px);
+}
+
+#gameContainer{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:4vh;
+}
+
+#contentDisplay{
+width:min(95%,1000px);
+height:60vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+#revealBtn{
+width:clamp(40px,7vw,75px);
+cursor:pointer;
 }
 </style>
 </head>
 <body>
 
-<div id="mediaContainer">
+<canvas id="bgCanvas"></canvas>
 
-    <video 
-        id="bgVideo"
-        muted
-        playsinline
-        preload="auto"
-        src="https://redesencontros.github.io/dancaeissoaquio/content/video1.mp4">
-    </video>
+<div id="mainLayer">
+<header>
+<img id="headerLogo"
+src="https://redesencontros.github.io/dancaeissoaquio/assets/header.png">
+</header>
 
-    <audio
-        id="bgAudio"
-        preload="auto"
-        src="https://redesencontros.github.io/dancaeissoaquio/content/audio1.mp3">
-    </audio>
-
+<div id="gameContainer">
+<div id="contentDisplay"></div>
+<img id="revealBtn"
+src="https://redesencontros.github.io/dancaeissoaquio/assets/button.png">
+</div>
 </div>
 
-<button id="fetchBtn">FETCH</button>
-
 <script>
-const video = document.getElementById("bgVideo");
-const audio = document.getElementById("bgAudio");
-const fetchBtn = document.getElementById("fetchBtn");
 
-/* ===== HARD LOCK SETTINGS ===== */
+/* =====================================================
+   ================= GPU MURMURATION ===================
+===================================================== */
 
-// No controls ever
-video.controls = false;
+const canvas = document.getElementById("bgCanvas");
+const gl = canvas.getContext("webgl2");
 
-// Force loop via property (more reliable than attribute)
-video.loop = true;
-audio.loop = true;
-
-// Attempt autoplay safely
-async function startMedia() {
-    try {
-        await video.play();
-    } catch (e) {
-        video.muted = true;
-        await video.play();
-    }
-
-    try {
-        await audio.play();
-    } catch (e) {
-        // Audio autoplay likely blocked until interaction
-        console.log("Audio autoplay blocked until user interaction.");
-    }
+if(!gl){
+alert("WebGL2 not supported");
 }
 
-window.addEventListener("load", startMedia);
+function resize(){
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+gl.viewport(0,0,canvas.width,canvas.height);
+}
+window.addEventListener("resize",resize);
+resize();
 
-/* Stop everything when FETCH pressed */
-fetchBtn.addEventListener("click", () => {
-    video.pause();
-    audio.pause();
-});
+const isMobile = innerWidth < 768;
+const PARTICLES = isMobile ? 128*128 : 256*256;
+const SIZE = Math.sqrt(PARTICLES);
+
+function createTexture(data){
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,tex);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,SIZE,SIZE,0,gl.RGBA,gl.FLOAT,data);
+return tex;
+}
+
+function createFBO(tex){
+const fbo = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
+gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+return fbo;
+}
+
+gl.getExtension("EXT_color_buffer_float");
+
+const positions = new Float32Array(PARTICLES*4);
+const velocities = new Float32Array(PARTICLES*4);
+
+for(let i=0;i<PARTICLES;i++){
+positions[i*4]=Math.random()*2-1;
+positions[i*4+1]=Math.random()*2-1;
+velocities[i*4]=(Math.random()-0.5)*0.002;
+velocities[i*4+1]=(Math.random()-0.5)*0.002;
+}
+
+let posTexA=createTexture(positions);
+let posTexB=createTexture(null);
+let velTexA=createTexture(velocities);
+let velTexB=createTexture(null);
+
+let posFBOA=createFBO(posTexA);
+let posFBOB=createFBO(posTexB);
+let velFBOA=createFBO(velTexA);
+let velFBOB=createFBO(velTexB);
+
+const quad = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+-1,-1,1,-1,-1,1,
+-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+
+function compile(type,src){
+let s=gl.createShader(type);
+gl.shaderSource(s,src);
+gl.compileShader(s);
+return s;
+}
+
+const updateFS = `#version 300 es
+precision highp float;
+uniform sampler2D posTex;
+uniform sampler2D velTex;
+out vec4 outPos;
+out vec4 outVel;
+
+void main(){
+vec2 uv=gl_FragCoord.xy/vec2(${SIZE}.0,${SIZE}.0);
+vec4 pos=texture(posTex,uv);
+vec4 vel=texture(velTex,uv);
+
+vec2 p=pos.xy;
+vec2 v=vel.xy;
+
+v+=vec2(-p.y,p.x)*0.0003; // swirl
+v+=-p*0.0005; // center pull
+
+float speed=length(v);
+if(speed>0.01) v*=0.01/speed;
+
+p+=v;
+
+if(p.x>1.0||p.x<-1.0) v.x*=-1.0;
+if(p.y>1.0||p.y<-1.0) v.y*=-1.0;
+
+outPos=vec4(p,0,1);
+outVel=vec4(v,0,1);
+}
+`;
+
+const renderVS = `#version 300 es
+precision highp float;
+uniform sampler2D posTex;
+out vec4 color;
+void main(){
+int id=gl_VertexID;
+int x=id%${SIZE};
+int y=id/${SIZE};
+vec2 uv=(vec2(x,y)+0.5)/${SIZE}.0;
+vec4 pos=texture(posTex,uv);
+gl_Position=vec4(pos.xy,0,1);
+gl_PointSize=${isMobile?2.0:1.2};
+color=vec4(1);
+}
+`;
+
+const renderFS = `#version 300 es
+precision highp float;
+in vec4 color;
+out vec4 fragColor;
+void main(){
+fragColor=color;
+}
+`;
+
+const updateProg=gl.createProgram();
+gl.attachShader(updateProg,compile(gl.VERTEX_SHADER,`#version 300 es
+in vec2 a;void main(){gl_Position=vec4(a,0,1);}`));
+gl.attachShader(updateProg,compile(gl.FRAGMENT_SHADER,updateFS));
+gl.linkProgram(updateProg);
+
+const renderProg=gl.createProgram();
+gl.attachShader(renderProg,compile(gl.VERTEX_SHADER,renderVS));
+gl.attachShader(renderProg,compile(gl.FRAGMENT_SHADER,renderFS));
+gl.linkProgram(renderProg);
+
+function step(){
+gl.useProgram(updateProg);
+gl.bindFramebuffer(gl.FRAMEBUFFER,posFBOB);
+gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+let loc=gl.getAttribLocation(updateProg,"a");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D,posTexA);
+gl.uniform1i(gl.getUniformLocation(updateProg,"posTex"),0);
+
+gl.activeTexture(gl.TEXTURE1);
+gl.bindTexture(gl.TEXTURE_2D,velTexA);
+gl.uniform1i(gl.getUniformLocation(updateProg,"velTex"),1);
+
+gl.drawArrays(gl.TRIANGLES,0,6);
+
+[posTexA,posTexB]=[posTexB,posTexA];
+[posFBOA,posFBOB]=[posFBOB,posFBOA];
+}
+
+function render(){
+gl.useProgram(renderProg);
+gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D,posTexA);
+gl.uniform1i(gl.getUniformLocation(renderProg,"posTex"),0);
+gl.drawArrays(gl.POINTS,0,PARTICLES);
+}
+
+function loop(){
+step();
+gl.clearColor(0.2,0.21,0.21,1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+render();
+requestAnimationFrame(loop);
+}
+loop();
+
+/* =====================================================
+   =================== MEDIA LOGIC =====================
+===================================================== */
+
+let currentMedia=null;
+const sheetURL="https://raw.githubusercontent.com/redesencontros/dancaeissoaquio/main/content-list.txt";
+let links=[],deck=[];
+
+async function fetchSheet(){
+if(links.length) return;
+let r=await fetch(sheetURL);
+let t=await r.text();
+links=t.split(/\n/).filter(l=>l.trim());
+deck=[...links];
+}
+
+document.getElementById("revealBtn").onclick=async()=>{
+if(currentMedia){currentMedia.pause();currentMedia.remove();currentMedia=null;}
+await fetchSheet();
+if(!deck.length) deck=[...links];
+let url=deck.splice(Math.random()*deck.length|0,1)[0];
+embed(url);
+};
+
+function embed(url){
+let d=document.getElementById("contentDisplay");
+d.innerHTML="";
+if(url.match(/\.(jpg|png|gif|webp)$/i)){
+let i=new Image();i.src=url;d.appendChild(i);return;
+}
+if(url.match(/\.(mp4|webm)$/i)){
+let v=document.createElement("video");
+v.src=url;v.loop=true;v.playsInline=true;v.removeAttribute("controls");
+d.appendChild(v);v.play();currentMedia=v;return;
+}
+if(url.match(/\.(mp3|wav)$/i)){
+let a=document.createElement("audio");
+a.src=url;a.loop=true;a.removeAttribute("controls");
+d.appendChild(a);a.play();currentMedia=a;
+}
+}
+
 </script>
-
 </body>
 </html>
