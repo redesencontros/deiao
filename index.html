@@ -17,7 +17,6 @@
     font-display: swap;
 }
 
-
 /* ================= BASE ================= */
 
 html,body{
@@ -89,6 +88,7 @@ gap:4vh;
 width:clamp(40px,7vw,75px);
 cursor:pointer;
 }
+
 </style>
 </head>
 <body>
@@ -107,19 +107,70 @@ src="https://redesencontros.github.io/dancaeissoaquio/assets/header.png">
 src="https://redesencontros.github.io/dancaeissoaquio/assets/button.png">
 </div>
 </div>
-document.fonts.load('1em "LemonTuesday"').then(() => {
-    document.getElementById("contentDisplay").style.visibility = "visible";
-});
 
 <script>
 
-/* =====================================================
-   ================= GPU MURMURATION ===================
-   (UNCHANGED – your original code continues here)
-===================================================== */
+/* ================= SAFE START ================= */
 
-/* Keep your entire existing WebGL + media logic exactly as before */
+window.addEventListener("DOMContentLoaded", () => {
+
+    // Ensure font load does not block entire app
+    if (document.fonts) {
+        document.fonts.load('1em "LemonTuesday"')
+            .then(() => {
+                document.getElementById("contentDisplay").style.visibility = "visible";
+            })
+            .catch(() => {
+                document.getElementById("contentDisplay").style.visibility = "visible";
+            });
+    } else {
+        document.getElementById("contentDisplay").style.visibility = "visible";
+    }
+
+    /* ================= BUTTON ================= */
+
+    const btn = document.getElementById("revealBtn");
+    if (btn) {
+        btn.addEventListener("click", () => {
+            console.log("Button clicked");
+            // Your original reveal logic stays here
+        });
+    }
+
+    /* ================= BACKGROUND (SAFE INIT) ================= */
+
+    const canvas = document.getElementById("bgCanvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const gl = canvas.getContext("webgl", { alpha: false });
+
+    if (!gl) {
+        console.error("WebGL not supported");
+        return;
+    }
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.2, 0.21, 0.2, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    /* =====================================================
+       ================= GPU MURMURATION ===================
+       (PUT YOUR ORIGINAL WEBGL CODE BELOW THIS LINE)
+    ===================================================== */
+
+});
+
+
+/* Resize handling */
+
+window.addEventListener("resize", () => {
+    const canvas = document.getElementById("bgCanvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
 
 </script>
+
 </body>
 </html>
