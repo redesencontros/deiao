@@ -124,8 +124,13 @@ const gl = canvas.getContext("webgl");
 let width, height;
 
 function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5); 
+  width = canvas.width = window.innerWidth * dpr;
+  height = canvas.height = window.innerHeight * dpr;
+
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+
   gl.viewport(0, 0, width, height);
 }
 window.addEventListener("resize", resize);
@@ -444,6 +449,7 @@ function showContent(url) {
 
 </body>
 </html>
+
 
 
 
