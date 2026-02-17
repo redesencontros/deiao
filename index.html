@@ -217,10 +217,10 @@ const entrySide = Math.floor(Math.random() * 4);
 
 class Boid {
   constructor() {
-    const clusterRadius = 260;
+    const clusterRadius = 150;
     const angle = Math.random() * Math.PI * 2;
     const r = Math.random() * clusterRadius;
-    const far = 600;
+    const far = 300;
 
     if (entrySide === 0) {
       this.x = -far + Math.cos(angle) * r;
@@ -296,7 +296,7 @@ class Boid {
     this.vy += (height / 2 - this.y) * globalPull;
 
     const speedSq = this.vx * this.vx + this.vy * this.vy;
-    const maxSpeed = 3.5;
+    const maxSpeed = 3;
     if (speedSq > maxSpeed * maxSpeed) {
       const scale = maxSpeed / Math.sqrt(speedSq);
       this.vx *= scale;
@@ -443,4 +443,5 @@ function showContent(url) {
 
 </body>
 </html>
+
 
