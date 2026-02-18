@@ -273,8 +273,8 @@ class Dot {
     if (this.trail.length < 2) return;
 
     trailCtx.beginPath();
-    trailCtx.lineWidth = 0.01;
-    trailCtx.strokeStyle = "black";
+    trailCtx.lineWidth = 0.005;
+    trailCtx.strokeStyle = "white";
 
     for (let i = 0; i < this.trail.length; i++) {
       const p = this.trail[i];
@@ -363,6 +363,7 @@ animate();
 
 </body>
 </html>
+
 
 
 
