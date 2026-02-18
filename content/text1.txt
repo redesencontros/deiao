@@ -1,3 +1,5 @@
+align:left
+
 uma vez eu dancei uma DANÇA
 tipo um gesto todo Apolíneo, esticadinho como se estivesse se admirando no espelho
 tipo uma rave de pessoas elegantes dançando num feixe de raio laser verde
@@ -12,4 +14,4 @@ tipo sacudir a água de forma violenta e se debater no chão sem controle
 tipo olhar uma pessoa no olho e ter vontade de sacudi-la
 tipo uma mão que flutua lentamente como um saco plástico ao vento
 mas não é nada disso
-é isso aqui, ó:
+é isso aqui, ó
