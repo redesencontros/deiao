@@ -2,455 +2,426 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DANÇA é isso aqui, ó</title>
-
+<title>Orbiting Cursor Dots</title>
 <style>
-* {
+  body {
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
+    height: 100vh;
+    background: #0f1116;
     overflow: hidden;
-    font-family: sans-serif;
-    background: transparent;
-}
-
-/* BACKGROUND */
-#backgroundApp {
+  }
+  canvas {
     position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: #333635;
-}
-
-#backgroundApp canvas {
-    display: block;
-}
-
-/* GAME LAYER */
-#gameLayer {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* HEADER */
-#header {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 3vh;
-    flex-shrink: 0;
-}
-
-#header img {
-    width: clamp(100px, 40vw, 300px);
-    height: auto;
-}
-
-/* CONTENT */
-#contentDisplay {
-    flex: 1; /* takes remaining vertical space */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 2vh 2vw;
-    overflow: hidden;
-}
-
-#contentDisplay img,
-#contentDisplay video,
-#contentDisplay div {
-    max-width: 100%;
-    max-height: 100%;
-}
-
-
-/* BUTTON */
-#gameButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 4vh;
-    align-self: center;
-    flex-shrink: 0;
-}
-
-#gameButton img {
-    width: clamp(50px, 10vw, 100px);
-    height: auto;
-}
-
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
 
-<!-- BACKGROUND -->
-<div id="backgroundApp">
-    <canvas id="canvas"></canvas>
-</div>
-
-<!-- GAME LAYER -->
-<div id="gameLayer">
-
-    <div id="header">
-        <img id="headerImage">
-    </div>
-
-    <div id="contentDisplay"></div>
-
-    <button id="gameButton">
-        <img id="buttonImage">
-    </button>
-
-</div>
-
 <script>
-/* =========================
-   AMEBA BOIDS BACKGROUND (WEBGL RENDER)
-========================= */
+const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-const canvas = document.getElementById("canvas");
-const gl = canvas.getContext("webgl");
+const trailCanvas = document.createElement("canvas");
+const trailCtx = trailCanvas.getContext("2d");
 
-let width, height;
+const dotCanvas = document.createElement("canvas");
+const dotCtx = dotCanvas.getContext("2d");
 
-function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
-  gl.viewport(0, 0, width, height);
-}
-window.addEventListener("resize", resize);
-resize();
+document.body.appendChild(trailCanvas);
+document.body.appendChild(dotCanvas);
 
-/* ---------- SHADERS ---------- */
+let width = trailCanvas.width = dotCanvas.width = window.innerWidth;
+let height = trailCanvas.height = dotCanvas.height = window.innerHeight;
 
-const vertexShaderSource = `
-attribute vec2 a_position;
-uniform vec2 u_resolution;
+window.addEventListener("resize", () => {
+  width = trailCanvas.width = dotCanvas.width = window.innerWidth;
+  height = trailCanvas.height = dotCanvas.height = window.innerHeight;
+});
 
-void main() {
-  vec2 zeroToOne = a_position / u_resolution;
-  vec2 zeroToTwo = zeroToOne * 2.0;
-  vec2 clipSpace = zeroToTwo - 1.0;
-  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-  gl_PointSize = 1.0;
-}
-`;
+const cursor = { x: width/2, y: height/2 };
+let idleTimer = 0;
 
-const fragmentShaderSource = `
-precision mediump float;
-void main() {
-  gl_FragColor = vec4(1, 1, 1, 1);
-}
-`;
+window.addEventListener("mousemove", e => {
+  cursor.x = e.clientX;
+  cursor.y = e.clientY;
+  idleTimer = 0;
+});
 
-function createShader(type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  return shader;
-}
+let isTouching = false;
 
-const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
-const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+window.addEventListener("touchstart", () => {
+  isTouching = true;
+}, { passive: true });
 
-const program = gl.createProgram();
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-gl.useProgram(program);
+window.addEventListener("touchend", () => {
+  isTouching = false;
+}, { passive: true });
 
-const positionLocation = gl.getAttribLocation(program, "a_position");
-const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+window.addEventListener("touchmove", e => {
+  if (!isTouching) return;
+  const t = e.touches[0];
+  if (!t) return;
 
-const positionBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  cursor.x = t.clientX;
+  cursor.y = t.clientY;
+  idleTimer = 0;
 
-gl.enableVertexAttribArray(positionLocation);
-gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  e.preventDefault();
+}, { passive: false });
 
-/* ---------- BOIDS (UNCHANGED LOGIC) ---------- */
+class Dot {
+  constructor(x, y, color, baseMaxSpeed, maxForce, orbitRadius) {
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
 
-const isMobile = window.innerWidth < 768;
-const BOID_COUNT = isMobile ? 500 : 2000;
-const boids = [];
-let frame = 0;
-const perception = 30;
-const cellSize = perception;
-let grid = {};
+    this.radius = 10;
+    this.color = color;
 
-function buildGrid() {
-  grid = {};
-  for (let i = 0; i < boids.length; i++) {
-    const b = boids[i];
-    const cx = Math.floor(b.x / cellSize);
-    const cy = Math.floor(b.y / cellSize);
-    const key = cx + "," + cy;
-    if (!grid[key]) grid[key] = [];
-    grid[key].push(b);
-  }
-}
+    this.baseMaxSpeed = baseMaxSpeed;
+    this.maxForce = maxForce;
+    this.orbitRadius = orbitRadius;
 
-function getNearbyBoids(boid) {
-  const cx = Math.floor(boid.x / cellSize);
-  const cy = Math.floor(boid.y / cellSize);
-  let neighbors = [];
-  for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-      const key = (cx + x) + "," + (cy + y);
-      if (grid[key]) neighbors = neighbors.concat(grid[key]);
-    }
-  }
-  return neighbors;
-}
+    this.orbitAngle = Math.random() * Math.PI * 2;
+    this.above = Math.random() < 0.5;
 
-const entrySide = Math.floor(Math.random() * 4);
-
-class Boid {
-  constructor() {
-    const clusterRadius = 150;
-    const angle = Math.random() * Math.PI * 2;
-    const r = Math.random() * clusterRadius;
-    const far = 300;
-
-    if (entrySide === 0) {
-      this.x = -far + Math.cos(angle) * r;
-      this.y = height / 2 + Math.sin(angle) * r;
-      this.vx = 3.5;
-      this.vy = (Math.random() - 0.5) * 0.4;
-    }
-    if (entrySide === 1) {
-      this.x = width + far + Math.cos(angle) * r;
-      this.y = height / 2 + Math.sin(angle) * r;
-      this.vx = -3.5;
-      this.vy = (Math.random() - 0.5) * 0.4;
-    }
-    if (entrySide === 2) {
-      this.x = width / 2 + Math.cos(angle) * r;
-      this.y = -far + Math.sin(angle) * r;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = 3.5;
-    }
-    if (entrySide === 3) {
-      this.x = width / 2 + Math.cos(angle) * r;
-      this.y = height + far + Math.sin(angle) * r;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = -3.5;
-    }
+    this.trail = [];
+    this.frameCounter = 0;
   }
 
-  update() {
-    let alignX = 0, alignY = 0;
-    let cohesionX = 0, cohesionY = 0;
-    let separationX = 0, separationY = 0;
+  update(dots) {
+    const dx = cursor.x - this.x;
+    const dy = cursor.y - this.y;
+
+    const distSq = dx*dx + dy*dy;
+    const maxDistance = 400;
+    const distanceFactor = Math.min(Math.sqrt(distSq) / maxDistance, 1);
+    const dynamicMaxSpeed = this.baseMaxSpeed * (1 + distanceFactor);
+
+    if (idleTimer > 120) {
+      this.orbitAngle += 0.01;
+      const tx = cursor.x + Math.cos(this.orbitAngle) * this.orbitRadius;
+      const ty = cursor.y + Math.sin(this.orbitAngle) * this.orbitRadius;
+      this.seek(tx - this.x, ty - this.y, dynamicMaxSpeed);
+    } else {
+      this.seek(dx, dy, dynamicMaxSpeed);
+    }
+
+    // DESKTOP unchanged
+    if (!IS_MOBILE) {
+      this.separate(dots);
+    }
+
+    // MOBILE steering dodge
+    if (IS_MOBILE) {
+      this.separateMobile(dots);
+    }
+
+    const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+    if (speed > dynamicMaxSpeed) {
+      this.vx = (this.vx/speed) * dynamicMaxSpeed;
+      this.vy = (this.vy/speed) * dynamicMaxSpeed;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // 🔥 HARD MIN DISTANCE ENFORCEMENT (MOBILE ONLY)
+    if (IS_MOBILE) {
+      this.enforceMinimumDistance(dots);
+    }
+
+    // ----- TRAIL -----
+    if (!IS_MOBILE) {
+      let totalDist = 0;
+      let count = 0;
+
+      for (let other of dots) {
+        if (other === this) continue;
+        const dx = this.x - other.x;
+        const dy = this.y - other.y;
+        totalDist += Math.sqrt(dx*dx + dy*dy);
+        count++;
+      }
+
+      const avgDist = count > 0 ? totalDist / count : 0;
+      const spacingRef = 300;
+      const distanceFactorSpacing = Math.min(avgDist / spacingRef, 1);
+
+      const minTrailSize = this.radius * 0.01;
+      const maxTrailSize = this.radius * 0.85;
+
+      const trailSize =
+        minTrailSize + (maxTrailSize - minTrailSize) * distanceFactorSpacing;
+
+      this.trail.push({
+        x: this.x,
+        y: this.y,
+        time: performance.now(),
+        size: trailSize
+      });
+
+    } else {
+      this.frameCounter++;
+
+      if (this.frameCounter % 2 === 0) {
+        this.trail.push({
+          x: this.x,
+          y: this.y,
+          time: performance.now()
+        });
+      }
+
+      if (this.trail.length > 250) {
+        this.trail.shift();
+      }
+    }
+  }
+
+  seek(dx, dy, maxSpeed) {
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist === 0) return;
+
+    dx = (dx/dist) * maxSpeed;
+    dy = (dy/dist) * maxSpeed;
+
+    if (IS_MOBILE) {
+      const responsiveness = 0.35;
+      this.vx += (dx - this.vx) * responsiveness;
+      this.vy += (dy - this.vy) * responsiveness;
+      return;
+    }
+
+    let steerX = dx - this.vx;
+    let steerY = dy - this.vy;
+
+    const steerMag = Math.sqrt(steerX*steerX + steerY*steerY);
+    if (steerMag > this.maxForce) {
+      steerX = (steerX/steerMag) * this.maxForce;
+      steerY = (steerY/steerMag) * this.maxForce;
+    }
+
+    this.vx += steerX;
+    this.vy += steerY;
+  }
+
+  // DESKTOP unchanged
+  separate(dots) {
+    const minDistance = this.radius * 3.5;
+
+    for (let other of dots) {
+      if (other === this) continue;
+
+      const dx = this.x - other.x;
+      const dy = this.y - other.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist > 0 && dist < minDistance) {
+        const overlap = minDistance - dist;
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        this.x += nx * overlap * 0.5;
+        this.y += ny * overlap * 0.5;
+
+        other.x -= nx * overlap * 0.5;
+        other.y -= ny * overlap * 0.5;
+      }
+    }
+  }
+
+  // MOBILE steering
+  separateMobile(dots) {
+    const desiredSeparation = this.radius * 3;
+    let steerX = 0;
+    let steerY = 0;
     let count = 0;
 
-    const perceptionSq = perception * perception;
-    const neighbors = getNearbyBoids(this);
-
-    for (let other of neighbors) {
+    for (let other of dots) {
       if (other === this) continue;
-      const dx = other.x - this.x;
-      const dy = other.y - this.y;
-      const distSq = dx * dx + dy * dy;
 
-      if (distSq < perceptionSq) {
-        alignX += other.vx;
-        alignY += other.vy;
-        cohesionX += other.x;
-        cohesionY += other.y;
+      const dx = this.x - other.x;
+      const dy = this.y - other.y;
+      const distSq = dx*dx + dy*dy;
 
-        if (distSq < 60) {
-          separationX -= dx;
-          separationY -= dy;
-        }
+      if (distSq > 0 && distSq < desiredSeparation * desiredSeparation) {
+        const dist = Math.sqrt(distSq);
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const strength = (desiredSeparation - dist) / desiredSeparation;
+
+        steerX += nx * strength;
+        steerY += ny * strength;
         count++;
       }
     }
 
     if (count > 0) {
-      alignX /= count;
-      alignY /= count;
-      cohesionX /= count;
-      cohesionY /= count;
-
-      this.vx += (alignX - this.vx) * 0.05;
-      this.vy += (alignY - this.vy) * 0.05;
-      this.vx += (cohesionX - this.x) * 0.0015;
-      this.vy += (cohesionY - this.y) * 0.0015;
-      this.vx += separationX * 0.02;
-      this.vy += separationY * 0.02;
+      steerX /= count;
+      steerY /= count;
+      const dodgeForce = 0.6;
+      this.vx += steerX * dodgeForce;
+      this.vy += steerY * dodgeForce;
     }
+  }
 
-    const globalPull = 0.0001;
-    this.vx += (width / 2 - this.x) * globalPull;
-    this.vy += (height / 2 - this.y) * globalPull;
+  // 🔥 HARD COLLISION RESOLVE (MOBILE ONLY)
+  enforceMinimumDistance(dots) {
+    const minDistance = this.radius * 3.5;
 
-    const speedSq = this.vx * this.vx + this.vy * this.vy;
-    const maxSpeed = 3;
-    if (speedSq > maxSpeed * maxSpeed) {
-      const scale = maxSpeed / Math.sqrt(speedSq);
-      this.vx *= scale;
-      this.vy *= scale;
+    for (let other of dots) {
+      if (other === this) continue;
+
+      const dx = this.x - other.x;
+      const dy = this.y - other.y;
+      const distSq = dx*dx + dy*dy;
+
+      if (distSq === 0) continue;
+
+      if (distSq < minDistance * minDistance) {
+        const dist = Math.sqrt(distSq);
+        const overlap = minDistance - dist;
+
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        // push both apart evenly
+        this.x += nx * overlap * 0.5;
+        this.y += ny * overlap * 0.5;
+
+        other.x -= nx * overlap * 0.5;
+        other.y -= ny * overlap * 0.5;
+      }
     }
+  }
 
-    this.x += this.vx;
-    this.y += this.vy;
+  drawDot(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+
+  drawTrail(now) {
+    if (!IS_MOBILE) {
+      for (let i = this.trail.length - 1; i >= 0; i--) {
+        const p = this.trail[i];
+        const age = now - p.time;
+
+        let alpha = 0.1;
+
+        if (age > 10000) {
+          const fade = (age - 10000) / 5000;
+          alpha = 0.1 * (1 - fade);
+        }
+
+        if (alpha <= 0) {
+          this.trail.splice(i, 1);
+          continue;
+        }
+
+        trailCtx.globalAlpha = alpha;
+        trailCtx.beginPath();
+        trailCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        trailCtx.fillStyle = "white";
+        trailCtx.fill();
+      }
+
+      trailCtx.globalAlpha = 1;
+
+    } else {
+      if (this.trail.length < 2) return;
+
+      trailCtx.beginPath();
+      trailCtx.lineWidth = 1;
+      trailCtx.strokeStyle = "white";
+
+      for (let i = 0; i < this.trail.length; i++) {
+        const p = this.trail[i];
+        const age = now - p.time;
+
+        if (age > 10000) {
+          this.trail.splice(i, 1);
+          i--;
+          continue;
+        }
+
+        let alpha = 1;
+        if (age > 5000) {
+          const fade = (age - 5000) / 5000;
+          alpha = 1 - fade;
+        }
+
+        trailCtx.globalAlpha = alpha;
+
+        if (i === 0) trailCtx.moveTo(p.x, p.y);
+        else trailCtx.lineTo(p.x, p.y);
+      }
+
+      trailCtx.stroke();
+      trailCtx.globalAlpha = 1;
+    }
   }
 }
 
-for (let i = 0; i < BOID_COUNT; i++) {
-  boids.push(new Boid());
+// ---------- Create Dots ----------
+function randomInCloud(radius) {
+  const angle = Math.random() * Math.PI * 2;
+  const r = Math.random() * radius;
+  return {
+    x: width / 2 + Math.cos(angle) * r,
+    y: height / 2 + Math.sin(angle) * r
+  };
 }
 
-const positions = new Float32Array(BOID_COUNT * 2);
+const colors = [
+  "rgb(255,80,80)",
+  "rgb(80,150,255)",
+  "rgb(80,255,150)",
+  "rgb(200,100,255)",
+  "rgb(255,200,80)"
+];
+
+const dots = colors.map((color, index) => {
+  const p = randomInCloud(150);
+
+  const baseSpeed = IS_MOBILE
+    ? 4 + Math.random() * 2
+    : 2 + Math.random() * 1.8;
+
+  const force = IS_MOBILE
+    ? 0.2
+    : 0.08;
+
+  return new Dot(
+    p.x,
+    p.y,
+    color,
+    baseSpeed,
+    force,
+    60 + index * 35
+  );
+});
 
 function animate() {
-  frame++;
+  idleTimer++;
+  const now = performance.now();
 
-  buildGrid();
+  dotCtx.clearRect(0, 0, width, height);
+  trailCtx.clearRect(0, 0, width, height);
 
-  for (let i = 0; i < boids.length; i++) {
-    if (i % 4 === frame % 5) boids[i].update();
-    positions[i * 2] = boids[i].x;
-    positions[i * 2 + 1] = boids[i].y;
-  }
-
-  gl.clearColor(0.2, 0.212, 0.208, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  gl.uniform2f(resolutionLocation, width, height);
-  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
-  gl.drawArrays(gl.POINTS, 0, BOID_COUNT);
+  for (let dot of dots) dot.update(dots);
+  for (let dot of dots) if (!dot.above) dot.drawDot(dotCtx);
+  for (let dot of dots) dot.drawTrail(now);
+  for (let dot of dots) if (dot.above) dot.drawDot(dotCtx);
 
   requestAnimationFrame(animate);
 }
 
 animate();
-
-/* =========================
-   GAME LOGIC
-========================= */
-
-const CONFIG = {
-    headerImage: "https://redesencontros.github.io/dancaeissoaquio/assets/header.png",
-    buttonImage: "https://redesencontros.github.io/dancaeissoaquio/assets/button.png",
-    buttonSound: "https://redesencontros.github.io/dancaeissoaquio/assets/button-sound.mp3",
-    contentListTxt: "https://redesencontros.github.io/dancaeissoaquio/content-list.txt"
-};
-
-let deck = [];
-let currentIndex = 0;
-let currentAudio = null;
-let buttonClickSound = new Audio(CONFIG.buttonSound);
-
-document.getElementById("headerImage").src = CONFIG.headerImage;
-document.getElementById("buttonImage").src = CONFIG.buttonImage;
-
-fetch(CONFIG.contentListTxt)
-    .then(res => res.text())
-    .then(text => {
-        deck = text.split("\n").map(l => l.trim()).filter(l => l);
-        shuffle(deck);
-    });
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-document.getElementById("gameButton").addEventListener("click", () => {
-
-    buttonClickSound.currentTime = 0;
-    buttonClickSound.play();
-
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-    }
-
-    if (currentIndex >= deck.length) {
-        shuffle(deck);
-        currentIndex = 0;
-    }
-
-    showContent(deck[currentIndex++]);
-});
-
-function showContent(url) {
-    const display = document.getElementById("contentDisplay");
-    display.innerHTML = "";
-
-    const lower = url.toLowerCase();
-
-    if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-        const img = document.createElement("img");
-        img.src = url;
-        display.appendChild(img);
-    }
-
-    else if (lower.match(/\.html$/)) {
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.width = "50%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    iframe.style.background = "transparent";
-
-    display.appendChild(iframe);
-}
-
-
-    else if (lower.match(/\.(mp4|webm)$/)) {
-    const video = document.createElement("video");
-    video.src = url;
-    video.loop = true;
-    video.playsInline = true;
-    video.controls = false;
-    video.autoplay = true;     // keep this
-    video.muted = false;       // allow sound
-    video.preload = "auto";
-
-    display.appendChild(video);
-
-    // Play explicitly after adding to DOM
-    video.play().catch(err => {
-        console.log("Autoplay blocked:", err);
-    });
-}
-
-
-    else if (lower.match(/\.(mp3|wav|ogg)$/)) {
-        const audio = new Audio(url);
-        audio.loop = true;
-        audio.play();
-        currentAudio = audio;
-    }
-
-    else if (lower.match(/\.txt$/)) {
-        fetch(url)
-            .then(res => res.text())
-            .then(text => {
-                const div = document.createElement("div");
-                div.style.color = "white";
-                div.style.textAlign = "center";
-                div.style.padding = "20px";
-                div.innerText = text;
-                display.appendChild(div);
-            });
-    }
-}
 </script>
 
 </body>
