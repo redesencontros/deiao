@@ -20,8 +20,8 @@ dotCanvas.style.width = "100%";
 dotCanvas.style.height = "100%";
 dotCanvas.style.pointerEvents = "auto";
 
-document.body.appendChild(trailCanvas);
-document.body.appendChild(dotCanvas);
+document.currentScript.parentElement.appendChild(trailCanvas);
+document.currentScript.parentElement.appendChild(dotCanvas);
 
 let width = trailCanvas.width = dotCanvas.width = window.innerWidth;
 let height = trailCanvas.height = dotCanvas.height = window.innerHeight;
@@ -209,3 +209,4 @@ function animate() {
 
 animate();
 </script>
+
