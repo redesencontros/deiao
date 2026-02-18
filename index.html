@@ -394,13 +394,23 @@ function showContent(url) {
 
     const lower = url.toLowerCase();
 
-    console.log("Processing:", lower);
-    
     if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
         const img = document.createElement("img");
         img.src = url;
         display.appendChild(img);
     }
+
+    else if (lower.match(/\.html$/)) {
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.width = "50%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.background = "transparent";
+
+    display.appendChild(iframe);
+}
+
 
     else if (lower.match(/\.(mp4|webm)$/)) {
     const video = document.createElement("video");
@@ -421,7 +431,7 @@ function showContent(url) {
 }
 
 
-    else if (lower.match(/\.(mp3|wav|ogg|m4a)$/)) {
+    else if (lower.match(/\.(mp3|wav|ogg)$/)) {
         const audio = new Audio(url);
         audio.loop = true;
         audio.play();
@@ -445,7 +455,3 @@ function showContent(url) {
 
 </body>
 </html>
-
-
-
-
