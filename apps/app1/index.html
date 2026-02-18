@@ -1,30 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Orbiting Cursor Dots</title>
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    overflow: hidden;
-  }
-
-  canvas {
-    position: fixed;
-    inset: 0;          /* full coverage */
-    width: 100%;
-    height: 100%;
-    pointer-events: auto;
-  }
-</style>
-
-</head>
-<body>
-
 <script>
 const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -33,6 +6,19 @@ const trailCtx = trailCanvas.getContext("2d");
 
 const dotCanvas = document.createElement("canvas");
 const dotCtx = dotCanvas.getContext("2d");
+
+/* FULLSCREEN SAFE SETUP INSIDE CONTAINER */
+trailCanvas.style.position = "fixed";
+trailCanvas.style.inset = "0";
+trailCanvas.style.width = "100%";
+trailCanvas.style.height = "100%";
+trailCanvas.style.pointerEvents = "none";
+
+dotCanvas.style.position = "fixed";
+dotCanvas.style.inset = "0";
+dotCanvas.style.width = "100%";
+dotCanvas.style.height = "100%";
+dotCanvas.style.pointerEvents = "auto";
 
 document.body.appendChild(trailCanvas);
 document.body.appendChild(dotCanvas);
@@ -47,10 +33,6 @@ window.addEventListener("resize", () => {
 
 const cursor = { x: width/2, y: height/2 };
 let idleTimer = 0;
-
-/* =========================
-   ✅ SAFE POINTER HANDLER
-========================= */
 
 function updatePointer(e) {
   const rect = dotCanvas.getBoundingClientRect();
@@ -69,10 +51,6 @@ function updatePointer(e) {
 document.addEventListener("mousemove", updatePointer);
 document.addEventListener("touchstart", updatePointer, { passive: true });
 document.addEventListener("touchmove", updatePointer, { passive: false });
-
-/* =========================
-   DOT CLASS (UNCHANGED)
-========================= */
 
 class Dot {
   constructor(x, y, color, baseMaxSpeed, maxForce, orbitRadius) {
@@ -113,14 +91,6 @@ class Dot {
       this.seek(dx, dy, dynamicMaxSpeed);
     }
 
-    if (!IS_MOBILE) {
-      this.separate(dots);
-    }
-
-    if (IS_MOBILE) {
-      this.separateMobile(dots);
-    }
-
     const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
     if (speed > dynamicMaxSpeed) {
       this.vx = (this.vx/speed) * dynamicMaxSpeed;
@@ -130,18 +100,10 @@ class Dot {
     this.x += this.vx;
     this.y += this.vy;
 
-    if (IS_MOBILE) {
-      this.enforceMinimumDistance(dots);
-    }
-
     this.frameCounter++;
 
     if (this.frameCounter % 2 === 0) {
-      this.trail.push({
-        x: this.x,
-        y: this.y,
-        time: performance.now()
-      });
+      this.trail.push({ x: this.x, y: this.y, time: performance.now() });
     }
 
     if (this.trail.length > 200) {
@@ -156,110 +118,8 @@ class Dot {
     dx = (dx/dist) * maxSpeed;
     dy = (dy/dist) * maxSpeed;
 
-    if (IS_MOBILE) {
-      const responsiveness = 0.35;
-      this.vx += (dx - this.vx) * responsiveness;
-      this.vy += (dy - this.vy) * responsiveness;
-      return;
-    }
-
-    let steerX = dx - this.vx;
-    let steerY = dy - this.vy;
-
-    const steerMag = Math.sqrt(steerX*steerX + steerY*steerY);
-    if (steerMag > this.maxForce) {
-      steerX = (steerX/steerMag) * this.maxForce;
-      steerY = (steerY/steerMag) * this.maxForce;
-    }
-
-    this.vx += steerX;
-    this.vy += steerY;
-  }
-
-  separate(dots) {
-    const minDistance = this.radius * 3.5;
-
-    for (let other of dots) {
-      if (other === this) continue;
-
-      const dx = this.x - other.x;
-      const dy = this.y - other.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-
-      if (dist > 0 && dist < minDistance) {
-        const overlap = minDistance - dist;
-        const nx = dx / dist;
-        const ny = dy / dist;
-
-        this.x += nx * overlap * 0.5;
-        this.y += ny * overlap * 0.5;
-
-        other.x -= nx * overlap * 0.5;
-        other.y -= ny * overlap * 0.5;
-      }
-    }
-  }
-
-  separateMobile(dots) {
-    const desiredSeparation = this.radius * 3;
-    let steerX = 0;
-    let steerY = 0;
-    let count = 0;
-
-    for (let other of dots) {
-      if (other === this) continue;
-
-      const dx = this.x - other.x;
-      const dy = this.y - other.y;
-      const distSq = dx*dx + dy*dy;
-
-      if (distSq > 0 && distSq < desiredSeparation * desiredSeparation) {
-        const dist = Math.sqrt(distSq);
-        const nx = dx / dist;
-        const ny = dy / dist;
-        const strength = (desiredSeparation - dist) / desiredSeparation;
-
-        steerX += nx * strength;
-        steerY += ny * strength;
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      steerX /= count;
-      steerY /= count;
-      const dodgeForce = 0.6;
-      this.vx += steerX * dodgeForce;
-      this.vy += steerY * dodgeForce;
-    }
-  }
-
-  enforceMinimumDistance(dots) {
-    const minDistance = this.radius * 3.5;
-
-    for (let other of dots) {
-      if (other === this) continue;
-
-      const dx = this.x - other.x;
-      const dy = this.y - other.y;
-      const distSq = dx*dx + dy*dy;
-
-      if (distSq === 0) continue;
-
-      if (distSq < minDistance * minDistance) {
-        const dist = Math.sqrt(distSq);
-        const overlap = minDistance - dist;
-
-        const nx = dx / dist;
-        const ny = dy / dist;
-
-        this.x += nx * overlap * 0.5;
-        this.y += ny * overlap * 0.5;
-
-        other.x -= nx * overlap * 0.5;
-        other.y -= ny * overlap * 0.5;
-      }
-    }
+    this.vx += (dx - this.vx) * 0.08;
+    this.vy += (dy - this.vy) * 0.08;
   }
 
   drawDot(ctx) {
@@ -288,8 +148,7 @@ class Dot {
 
       let alpha = 1;
       if (age > 3000) {
-        const fade = (age - 3000) / 3000;
-        alpha = 1 - fade;
+        alpha = 1 - (age - 3000) / 3000;
       }
 
       trailCtx.globalAlpha = alpha;
@@ -302,8 +161,6 @@ class Dot {
     trailCtx.globalAlpha = 1;
   }
 }
-
-/* ---------- Create Dots ---------- */
 
 function randomInCloud(radius) {
   const angle = Math.random() * Math.PI * 2;
@@ -325,20 +182,12 @@ const colors = [
 const dots = colors.map((color, index) => {
   const p = randomInCloud(150);
 
-  const baseSpeed = IS_MOBILE
-    ? 4 + Math.random() * 1.5
-    : 2 + Math.random() * 1;
-
-  const force = IS_MOBILE
-    ? 0.2
-    : 0.08;
-
   return new Dot(
     p.x,
     p.y,
     color,
-    baseSpeed,
-    force,
+    2 + Math.random(),
+    0.08,
     60 + index * 35
   );
 });
@@ -360,17 +209,3 @@ function animate() {
 
 animate();
 </script>
-
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
