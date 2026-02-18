@@ -19,6 +19,9 @@ html, body {
     font-family: sans-serif;
     background: transparent;
 }
+#fullscreenHTML {
+    pointer-events: auto;
+}
 
 /* BACKGROUND */
 #backgroundApp {
@@ -35,11 +38,12 @@ html, body {
 /* GAME LAYER */
 #gameLayer {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+    pointer-events: none;   /* ⭐ IMPORTANT */
 }
 
 /* HEADER */
@@ -49,6 +53,8 @@ html, body {
     justify-content: center;
     padding-top: 3vh;
     flex-shrink: 0;
+    position: relative;
+    z-index: 3;
 }
 
 #header img {
@@ -64,6 +70,7 @@ html, body {
     align-items: center;
     padding: 2vh 2vw;
     overflow: hidden;
+    z-index: 2;
 }
 
 #contentDisplay img,
@@ -82,7 +89,18 @@ html, body {
     margin-bottom: 4vh;
     align-self: center;
     flex-shrink: 0;
+    position: relative;
+    z-index: 4;
 }
+#gameButton,
+#gameButton * {
+    pointer-events: auto;
+}
+
+#contentDisplay iframe {
+    pointer-events: auto;
+}
+
 
 #gameButton img {
     width: clamp(50px, 10vw, 100px);
@@ -372,6 +390,11 @@ function shuffle(array) {
 
 document.getElementById("gameButton").addEventListener("click", () => {
 
+    if (!deck.length) {
+        console.log("Deck not loaded yet");
+        return;
+    }
+
     buttonClickSound.currentTime = 0;
     buttonClickSound.play();
 
@@ -388,11 +411,20 @@ document.getElementById("gameButton").addEventListener("click", () => {
     showContent(deck[currentIndex++]);
 });
 
+
+
 function showContent(url) {
+
+   const existingFullscreen = document.getElementById("fullscreenHTML");
+if (existingFullscreen) {
+    existingFullscreen.remove();
+}
+
+
     const display = document.getElementById("contentDisplay");
     display.innerHTML = "";
 
-    const lower = url.toLowerCase();
+    const lower = url.toLowerCase();  // <-- THIS LINE MUST EXIST
 
     if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
         const img = document.createElement("img");
@@ -401,14 +433,25 @@ function showContent(url) {
     }
 
     else if (lower.match(/\.html$/)) {
+
+    // Remove previous fullscreen if exists
+    const existing = document.getElementById("fullscreenHTML");
+    if (existing) existing.remove();
+
     const iframe = document.createElement("iframe");
+    iframe.id = "fullscreenHTML";   // ⭐ IMPORTANT
     iframe.src = url;
-    iframe.style.width = "50%";
+
+    iframe.style.position = "absolute";
+    iframe.style.top = "0";
+    iframe.style.left = "0";
+    iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
     iframe.style.background = "transparent";
+    iframe.style.zIndex = "1";
 
-    display.appendChild(iframe);
+    document.getElementById("gameLayer").appendChild(iframe);
 }
 
 
