@@ -102,7 +102,7 @@ class Dot {
     const distSq = dx*dx + dy*dy;
     const maxDistance = 400;
     const distanceFactor = Math.min(Math.sqrt(distSq) / maxDistance, 1);
-    const dynamicMaxSpeed = this.baseMaxSpeed * (1 + distanceFactor);
+    const dynamicMaxSpeed = this.baseMaxSpeed * (0.7 + distanceFactor);
 
     if (idleTimer > 120) {
       this.orbitAngle += 0.01;
@@ -144,7 +144,7 @@ class Dot {
       });
     }
 
-    if (this.trail.length > 250) {
+    if (this.trail.length > 200) {
       this.trail.shift();
     }
   }
@@ -273,7 +273,7 @@ class Dot {
     if (this.trail.length < 2) return;
 
     trailCtx.beginPath();
-    trailCtx.lineWidth = 0.5;
+    trailCtx.lineWidth = 0.1;
     trailCtx.strokeStyle = "white";
 
     for (let i = 0; i < this.trail.length; i++) {
@@ -326,8 +326,8 @@ const dots = colors.map((color, index) => {
   const p = randomInCloud(150);
 
   const baseSpeed = IS_MOBILE
-    ? 4 + Math.random() * 1.8
-    : 2 + Math.random() * 1.5;
+    ? 4 + Math.random() * 1.5
+    : 2 + Math.random() * 1;
 
   const force = IS_MOBILE
     ? 0.2
@@ -363,6 +363,7 @@ animate();
 
 </body>
 </html>
+
 
 
 
