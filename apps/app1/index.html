@@ -81,7 +81,7 @@ class Dot {
     this.vx = 0;
     this.vy = 0;
 
-    this.radius = 10;
+    this.radius = 7;
     this.color = color;
 
     this.baseMaxSpeed = baseMaxSpeed;
@@ -273,22 +273,22 @@ class Dot {
     if (this.trail.length < 2) return;
 
     trailCtx.beginPath();
-    trailCtx.lineWidth = 1;
+    trailCtx.lineWidth = 0.5;
     trailCtx.strokeStyle = "white";
 
     for (let i = 0; i < this.trail.length; i++) {
       const p = this.trail[i];
       const age = now - p.time;
 
-      if (age > 10000) {
+      if (age > 7000) {
         this.trail.splice(i, 1);
         i--;
         continue;
       }
 
       let alpha = 1;
-      if (age > 5000) {
-        const fade = (age - 5000) / 5000;
+      if (age > 3000) {
+        const fade = (age - 3000) / 3000;
         alpha = 1 - fade;
       }
 
@@ -326,8 +326,8 @@ const dots = colors.map((color, index) => {
   const p = randomInCloud(150);
 
   const baseSpeed = IS_MOBILE
-    ? 4 + Math.random() * 2
-    : 2 + Math.random() * 1.8;
+    ? 4 + Math.random() * 1.8
+    : 2 + Math.random() * 1.5;
 
   const force = IS_MOBILE
     ? 0.2
@@ -363,5 +363,6 @@ animate();
 
 </body>
 </html>
+
 
 
