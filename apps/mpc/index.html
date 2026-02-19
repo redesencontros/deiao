@@ -6,10 +6,12 @@
 <title>MPC Virtual</title>
 
 <style>
-html { background: transparent; }
-        body{
+html {
+    background: transparent;
+}
+body{
         margin:0;
-    background:transparent;
+    background: transparent;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -62,8 +64,8 @@ html { background: transparent; }
 #mpc{
     position:relative;
 
-    height:60vh;              /* 🔥 60% da altura da tela */
-    aspect-ratio: 1 / 1.1;    /* mantém proporção */
+    height:60vh;              
+    aspect-ratio: 1 / 1.1;    
 
     padding:clamp(30px, 6%, 80px) 
             clamp(25px, 5%, 60px) 
@@ -71,76 +73,68 @@ html { background: transparent; }
             clamp(25px, 5%, 60px);
 
     background:
-        linear-gradient(135deg,#3a3a3a 25%,#363636 25%,#363636 50%,#3a3a3a 50%,#3a3a3a 75%,#363636 75%);
+    linear-gradient(145deg,
+        #ffffff 0%,
+        #f2f2f2 20%,
+        #e6e6e6 40%,
+        #f8f8f8 60%,
+        #dddddd 80%,
+        #ffffff 100%
+    );
+
     background-size:4px 4px;
 
     display:flex;
     flex-direction:column;
+
+    /* 🔥 Novo balanceamento */
+    justify-content:space-between;
     align-items:center;
 }
 
-
-
 /* ===== PARAFUSOS ===== */
 
-#mpc::before,
-#mpc::after{
-    content:"";
+.screw{
     position:absolute;
     width:14px;
     height:14px;
-    background:radial-gradient(circle at 30% 30%, #212121, #222);
+
+    background:
+        radial-gradient(circle at 35% 35%,
+            #5a5a5a 0%,
+            #3a3a3a 35%,
+            #1a1a1a 70%,
+            #000 100%
+        );
+
     border-radius:50%;
-    box-shadow:inset 0 0 4px #000;
+
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.25),
+        inset 0 -2px 4px rgba(0,0,0,0.8);
 }
 
-/* canto superior esquerdo */
-#mpc::before{
-    top:12px;
-    left:12px;
-}
+/* posições */
 
-/* canto superior direito */
-#mpc::after{
-    top:12px;
-    right:12px;
-}
-
-/* parafusos inferiores */
-#mpc .screw{
-    position:absolute;
-    width:14px;
-    height:14px;
-    background:radial-gradient(circle at 30% 30%, #212121, #222);
-    border-radius:50%;
-    box-shadow:inset 0 0 4px #000;
-}
-
+#screwTL{ top:12px; left:12px; }
+#screwTR{ top:12px; right:12px; }
 #screwBL{ bottom:12px; left:12px; }
 #screwBR{ bottom:12px; right:12px; }
-
-/* ===== LOGO ===== */
-
-#logo{
-    position:absolute;
-    top:4%;
-    left:50%;
-    transform:translateX(-50%);
-    height:clamp(35px, 7%, 80px);  /* 🔥 maior */
-    width:auto;
-    opacity:0.9;
-    pointer-events:none;
-}
-
 
 /* ===== TELA ===== */
 
 #screen{
     width:100%;
-    height:clamp(50px, 70%, 200px);
+
+    /* 🔥 Proporção equilibrada */
+    height:28%;
+    min-height:60px;
+    max-height:180px;
 
     background:#1b3b1b;
-    margin-bottom:clamp(25px, 5%, 60px);
+
+    /* 🔥 espaçamento proporcional menor */
+    margin-bottom:clamp(18px, 4%, 40px);
 
     box-shadow: inset 0 0 15px #000;
     color:#7CFF7C;
@@ -149,10 +143,10 @@ html { background: transparent; }
     align-items:center;
     justify-content:center;
 }
-#screenText{
-    font-size:clamp(9px, 1.8vh, 16px);  /* 🔥 proporcional à altura da tela */
-}
 
+#screenText{
+    font-size:clamp(9px, 5vh, 16px);
+}
 
 #screenText.blink {
     animation: blinkText 0.15s steps(2, start) 6;
@@ -173,8 +167,10 @@ html { background: transparent; }
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
 
-    gap:clamp(18px, 8%, 45px);
+    /* 🔥 leve ajuste no gap para compensar logo removida */
+    gap:clamp(20px, 6%, 45px);
 }
+
 
 
 /* ===== PADS PRETOS ===== */
@@ -213,7 +209,8 @@ html { background: transparent; }
 </div>
 
 <div id="mpc">
-    <img id="logo" src="https://redesencontros.github.io/dancaeissoaquio/assets/header.png" alt="DANÇA">
+    <div id="screwTL" class="screw"></div>
+    <div id="screwTR" class="screw"></div>
     <div id="screwBL" class="screw"></div>
     <div id="screwBR" class="screw"></div>
     <div id="screen">
@@ -377,4 +374,3 @@ await loadPads();
 </script>
 </body>
 </html>
-
