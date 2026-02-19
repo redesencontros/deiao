@@ -23,6 +23,7 @@ body{
 #mpcBody{
     width:100%;
     height:100%;
+    min-height: 0;
     display:flex;
     flex-direction:column;
     justify-content:space-between;
@@ -70,15 +71,13 @@ body{
 
 #mpc{
     position:relative;
-
     height:60vh;              
+    overflow: hidden;
     aspect-ratio: 1 / 1.1;    
-
     padding:clamp(30px, 6%, 80px) 
             clamp(25px, 5%, 60px) 
             clamp(30px, 6%, 80px) 
             clamp(25px, 5%, 60px);
-
     background:
     linear-gradient(145deg,
         #ffffff 0%,
@@ -140,13 +139,13 @@ body{
 #pads{
     width:100%;
     flex:1;
-
+    min-height:0;
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
 
     /* 🔥 leve ajuste no gap para compensar logo removida */
-    gap:clamp(20px, 6%, 45px);
+    gap: clamp(8px, 3%, 25px);
 }
 
 
@@ -356,3 +355,4 @@ mpcBody.style.filter = "blur(0px)";
 </script>
 </body>
 </html>
+
