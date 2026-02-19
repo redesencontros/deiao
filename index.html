@@ -422,9 +422,8 @@ document.getElementById("gameButton").addEventListener("click", () => {
 function showContent(url) {
 
    const existingFullscreen = document.getElementById("fullscreenHTML");
-if (existingFullscreen) {
-    existingFullscreen.remove();
-}
+if (existingFullscreen) existingFullscreen.remove();
+
 
 
     const display = document.getElementById("contentDisplay");
