@@ -444,22 +444,37 @@ if (existingFullscreen) {
     const existing = document.getElementById("fullscreenHTML");
     if (existing) existing.remove();
 
-    const iframe = document.createElement("iframe");
-    iframe.id = "fullscreenHTML";   // ⭐ IMPORTANT
-    iframe.src = url;
+    // ⭐ CHECK FOLDER
+    if (url.includes("/apps-fullscreen/")) {
 
-    iframe.style.position = "absolute";
-    iframe.style.top = "0";
-    iframe.style.left = "0";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    iframe.style.background = "transparent";
-    iframe.style.zIndex = "1";
+        // FULLSCREEN MODE (behind header + button)
+        const iframe = document.createElement("iframe");
+        iframe.id = "fullscreenHTML";
+        iframe.src = url;
 
-    document.getElementById("gameLayer").appendChild(iframe);
+        iframe.style.position = "absolute";
+        iframe.style.top = "0";
+        iframe.style.left = "0";
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.style.background = "transparent";
+        iframe.style.zIndex = "1";
+
+        document.getElementById("gameLayer").appendChild(iframe);
+
+    } else {
+
+        // NORMAL MODE (inside contentDisplay like images/videos)
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+
+        display.appendChild(iframe);
+    }
 }
-
 
     else if (lower.match(/\.(mp4|webm)$/)) {
     const video = document.createElement("video");
