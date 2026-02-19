@@ -20,17 +20,24 @@ body{
     user-select:none;
 }
 
-/* MPC desfocado inicialmente */
-#mpc {
+#mpcBody{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+
     filter: blur(6px);
     transition: filter 0.4s ease;
 }
+
 
 /* Overlay superior */
 #startOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,9 +48,9 @@ body{
 #playButton {
     font-size: 22px;
     padding: 18px 40px;
-    background: white;
+    background: rgb(215, 196, 25);
     color: black;
-    border: 2px solid #444;
+    border: none;
     cursor: pointer;
     letter-spacing: 3px;
     transition: transform 0.1s ease, background 0.2s ease;
@@ -209,15 +216,19 @@ body{
 </div>
 
 <div id="mpc">
-    <div id="screwTL" class="screw"></div>
-    <div id="screwTR" class="screw"></div>
-    <div id="screwBL" class="screw"></div>
-    <div id="screwBR" class="screw"></div>
-    <div id="screen">
-    <span id="screenText">é isso aqui, ó</span>
+    <div id="mpcBody">
+        <div id="screwTL" class="screw"></div>
+        <div id="screwTR" class="screw"></div>
+        <div id="screwBL" class="screw"></div>
+        <div id="screwBR" class="screw"></div>
+        <div id="screen">
+            <span id="screenText">é isso aqui, ó</span>
+        </div>
+
+        <div id="pads"></div>
+    </div>
 </div>
-    <div id="pads"></div>
-</div>
+
 
 <script>
 const screenText = document.getElementById("screenText");
@@ -368,7 +379,9 @@ await loadPads();
 
     overlay.style.opacity = "0";
     overlay.style.pointerEvents = "none";
-    mpc.style.filter = "blur(0px)";
+    const mpcBody = document.getElementById("mpcBody");
+mpcBody.style.filter = "blur(0px)";
+
 });
 
 </script>
