@@ -71,13 +71,20 @@ body{
 
 #mpc{
     position:relative;
-    height:60vh;              
+
+    width: min(90vw, 90vh);
+    aspect-ratio: 1 / 1.1;
+
+    max-height: 90vh;
+    max-width: 90vw;
+
     overflow: hidden;
-    aspect-ratio: 1 / 1.1;    
+
     padding:clamp(30px, 6%, 80px) 
             clamp(25px, 5%, 60px) 
             clamp(30px, 6%, 80px) 
             clamp(25px, 5%, 60px);
+
     background:
     linear-gradient(145deg,
         #ffffff 0%,
@@ -88,12 +95,8 @@ body{
         #ffffff 100%
     );
 
-    background-size:4px 4px;
-
     display:flex;
     flex-direction:column;
-
-    /* 🔥 Novo balanceamento */
     justify-content:space-between;
     align-items:center;
 }
@@ -355,4 +358,5 @@ mpcBody.style.filter = "blur(0px)";
 </script>
 </body>
 </html>
+
 
