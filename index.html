@@ -447,38 +447,26 @@ if (existingFullscreen) existingFullscreen.remove();
     if (existing) existing.remove();
 
     // ⭐ CHECK FOLDER
-    if (url.includes("/apps-fullscreen/")) {
+   if (url.includes("/apps-fullscreen/")) {
 
-        // FULLSCREEN MODE (behind header + button)
-        const iframe = document.createElement("iframe");
-        iframe.id = "fullscreenHTML";
-        iframe.src = url;
+    const fullscreenContainer = document.createElement("div");
+    fullscreenContainer.id = "fullscreenHTML";
+    fullscreenContainer.style.position = "fixed";
+    fullscreenContainer.style.inset = "0";
+    fullscreenContainer.style.zIndex = "1";
+    fullscreenContainer.style.pointerEvents = "none"; // não bloqueia botão
 
-        iframe.style.position = "absolute";
-        iframe.style.top = "0";
-        iframe.style.left = "0";
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.style.background = "transparent";
-        iframe.style.zIndex = "1";
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.background = "transparent";
 
-        const fullscreenContainer = document.createElement("div");
-fullscreenContainer.id = "fullscreenHTML";
-fullscreenContainer.style.position = "fixed";
-fullscreenContainer.style.inset = "0";
-fullscreenContainer.style.zIndex = "1";
-fullscreenContainer.style.pointerEvents = "auto";
-
-iframe.style.width = "100%";
-iframe.style.height = "100%";
-iframe.style.border = "none";
-iframe.style.background = "transparent";
-
-fullscreenContainer.appendChild(iframe);
-document.body.appendChild(fullscreenContainer);
-
-    } else {
+    fullscreenContainer.appendChild(iframe);
+    document.body.appendChild(fullscreenContainer);
+}
+   else {
 
         // NORMAL MODE (inside contentDisplay like images/videos)
         const iframe = document.createElement("iframe");
@@ -534,3 +522,4 @@ document.body.appendChild(fullscreenContainer);
 
 </body>
 </html>
+
