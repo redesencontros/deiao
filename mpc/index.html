@@ -6,19 +6,34 @@
 <title>MPC Virtual</title>
 
 <style>
+html, body {
+    height:100%;
+    overflow:hidden;
+    margin:0;
+    background:transparent;
+}
+
 body{
-        margin:0;
-    background:#111;
+    height:100%;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
     font-family:Arial, sans-serif;
     user-select:none;
+    padding:0;              /* ← REMOVE o padding vertical */
+    box-sizing:border-box;
 }
 
-/* MPC desfocado inicialmente */
-#mpc {
+/* Mantido para não alterar estrutura */
+#mpcBody{
+    width:100%;
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+
     filter: blur(6px);
     transition: filter 0.4s ease;
 }
@@ -27,7 +42,7 @@ body{
 #startOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,196 +53,260 @@ body{
 #playButton {
     font-size: 22px;
     padding: 18px 40px;
-    background: black;
-    color: white;
-    border: 2px solid #444;
+    background: rgb(215, 196, 25);
+    color: black;
+    border: none;
     cursor: pointer;
     letter-spacing: 3px;
     transition: transform 0.1s ease, background 0.2s ease;
+    font-family: "PlayFont", sans-serif;
+}
+
+@font-face {
+    font-family: "PlayFont";
+    src: url("https://redesencontros.github.io/dancaeissoaquio/assets/fonts/bozart.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
 }
 
 #playButton:active {
     transform: scale(0.95);
 }
-/* ===== CORPO 2D ===== */
+
+/* ===== REMOVIDO CORPO VISUAL ===== */
 
 #mpc{
-    position:relative;
-    padding:55px 50px 50px 50px;
-    background:
-        linear-gradient(135deg,#3a3a3a 25%,#363636 25%,#363636 50%,#3a3a3a 50%,#3a3a3a 75%,#363636 75%);
-    background-size:4px 4px; /* textura metálica sutil */
+    height:92%;
+    max-height:92%;
+
+    aspect-ratio: 3 / 4;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
 }
-
-/* ===== PARAFUSOS ===== */
-
-#mpc::before,
-#mpc::after{
-    content:"";
-    position:absolute;
-    width:14px;
-    height:14px;
-    background:radial-gradient(circle at 30% 30%, #212121, #222);
-    border-radius:50%;
-    box-shadow:inset 0 0 4px #000;
-}
-
-/* canto superior esquerdo */
-#mpc::before{
-    top:12px;
-    left:12px;
-}
-
-/* canto superior direito */
-#mpc::after{
-    top:12px;
-    right:12px;
-}
-
-/* parafusos inferiores */
-#mpc .screw{
-    position:absolute;
-    width:14px;
-    height:14px;
-    background:radial-gradient(circle at 30% 30%, #212121, #222);
-    border-radius:50%;
-    box-shadow:inset 0 0 4px #000;
-}
-
-#screwBL{ bottom:12px; left:12px; }
-#screwBR{ bottom:12px; right:12px; }
-
-/* ===== LOGO ===== */
-
-#logo{
-    position:absolute;
-    top:15px;
-    left:50%;
-    transform:translateX(-50%);
-    height:25px;        /* controla tamanho */
-    width: auto;
-    opacity:0.7;        /* discreto */
-    pointer-events:none;
-}
-
 
 /* ===== TELA ===== */
 
 #screen{
     width:100%;
-    height:60px;
+    flex:0 0 18%;  /* visor ocupa 18% da altura total */
+    
     background:#1b3b1b;
-    margin-bottom:35px;
+    margin-bottom:3%;
+    
     box-shadow: inset 0 0 15px #000;
     color:#7CFF7C;
 
     display:flex;
-    align-items:center;       /* central vertical */
-    justify-content:center;   /* central horizontal */
+    align-items:center;
+    justify-content:center;
+}
 
-    font-size:14px;
-    letter-spacing:1px;
-    text-align:center;
+#screenText{
+    font-size:clamp(9px, 5vh, 16px);
+}
+
+#screenText.blink {
+    animation: blinkText 0.15s steps(2, start) 6;
+}
+
+@keyframes blinkText {
+    to { opacity: 0; }
 }
 
 /* ===== GRID ===== */
 
 #pads{
+    width:100%;
+    flex:1;
+
     display:grid;
-    grid-template-columns: repeat(3, 110px);
-    grid-template-rows: repeat(3, 110px);
-    gap:18px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+
+    gap:3%;
 }
 
-/* ===== PADS PRETOS ===== */
+/* ===== PADS ULTRA FLAT ===== */
 
 .pad{
-    background:linear-gradient(to bottom,#111,#000);
+    width:100%;
+    
+    background:#000;
     border-radius:4px;
-    box-shadow:
-        0 6px 0 #050505,
-        inset 0 0 15px rgba(255,255,255,0.05),
-        inset 0 -8px 12px rgba(0,0,0,0.9);
+
     cursor:pointer;
-    transition:all 0.08s ease;
+    transition:
+        background 0.12s ease,
+        box-shadow 0.12s ease,
+        transform 0.06s ease;
+
+    box-shadow:none;
 }
 
+/* Estado ativo estilo Push */
 .pad.active{
-    transform:translateY(6px);
+    background:#ff6a00;
+
     box-shadow:
-        0 0 0 #050505,
-        inset 0 0 25px #ff6600;
-    background:linear-gradient(to bottom,#ff6600,#cc4400);
+        0 0 18px rgba(255,106,0,0.7);
+
+    transform:scale(0.97);
 }
 
-/* Responsivo */
-@media (max-width:600px){
-    #pads{
-        grid-template-columns: repeat(3, 85px);
-        grid-template-rows: repeat(3, 85px);
-        gap:15px;
-    }
-}
 </style>
-
-
 </head>
-
-<body>
 <body>
 
 <div id="startOverlay">
-    <button id="playButton">PLAY</button>
+    <button id="playButton">Vai DJ!</button>
 </div>
 
 <div id="mpc">
-    <img id="logo" src="https://redesencontros.github.io/dancaeissoaquio/assets/header.png" alt="DANÇA">
-    <div id="screwBL" class="screw"></div>
-    <div id="screwBR" class="screw"></div>
-    <div id="screen">é isso aqui, ó</div>
-    <div id="pads"></div>
+    <div id="mpcBody">
+        <div id="screen">
+            <span id="screenText">é isso aqui, ó</span>
+        </div>
+
+        <div id="pads"></div>
+    </div>
 </div>
 
 <script>
-const baseTrack = new Audio("audio/base.mp3");
-baseTrack.loop = true;
-baseTrack.volume = 0.6;
+const screenText = document.getElementById("screenText");
+
+let audioContext;
+let baseBuffer;
+let baseSource;
+let padBuffers = {};
+let currentPadSource = null;
+let currentPadElement = null;
+let masterCompressor;
+let masterGain;
+
+async function initBaseTrack() {
+    const response = await fetch("../../mpc/audio/base.wav");
+    const arrayBuffer = await response.arrayBuffer();
+    baseBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    playBaseLoop();
+}
+
+function playBaseLoop() {
+    baseSource = audioContext.createBufferSource();
+    baseSource.buffer = baseBuffer;
+    baseSource.loop = true;
+    baseSource.connect(masterCompressor);
+    baseSource.start(0);
+}
+
+async function loadPads() {
+    for (let url of padSounds) {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        padBuffers[url] = await audioContext.decodeAudioData(arrayBuffer);
+    }
+}
 
 const padSounds = [
-    "pad1.wav","pad2.wav","pad3.wav",
-    "pad4.wav","pad5.wav","pad6.wav",
-    "pad7.wav","pad8.wav","pad9.wav"
+"../../mpc/audio/danca.wav",
+"../../mpc/audio/hiphop.wav",
+"../../mpc/audio/funk.wav",
+"../../mpc/audio/aovivo.wav",
+"../../mpc/audio/lapragalera.wav",
+"../../mpc/audio/caravaisertipoassim.wav",
+"../../mpc/audio/senteopassim.wav",
+"../../mpc/audio/passim.wav",
+"../../mpc/audio/muitochocante.wav"
 ];
 
 const screen = document.getElementById("screen");
 const padContainer = document.getElementById("pads");
 
-// Criar pads
-padSounds.forEach((sound, i)=>{
+padSounds.forEach((sound)=>{
     const pad = document.createElement("div");
     pad.classList.add("pad");
     pad.dataset.sound = sound;
     padContainer.appendChild(pad);
-
     pad.addEventListener("pointerdown", () => triggerPad(pad));
 });
 
+function triggerPad(pad){
+    const buffer = padBuffers[pad.dataset.sound];
+    if (!buffer) return;
+
+    const fileName = pad.dataset.sound.split("/").pop().replace(".wav", "");
+    screenText.textContent = fileName;
+    screenText.classList.remove("blink");
+    void screenText.offsetWidth;
+    screenText.classList.add("blink");
+
+    const now = audioContext.currentTime;
+
+    if (currentPadSource) {
+        try {
+            currentPadSource.gainNode.gain.cancelScheduledValues(now);
+            currentPadSource.gainNode.gain.setValueAtTime(
+                currentPadSource.gainNode.gain.value,
+                now
+            );
+            currentPadSource.gainNode.gain.linearRampToValueAtTime(0, now + 0.005);
+            currentPadSource.stop(now + 0.005);
+        } catch(e){}
+    }
+
+    const source = audioContext.createBufferSource();
+    const gainNode = audioContext.createGain();
+
+    source.buffer = buffer;
+    source.connect(gainNode);
+    gainNode.connect(masterCompressor);
+
+    gainNode.gain.setValueAtTime(1, now);
+    source.start(now);
+
+    source.gainNode = gainNode;
+    currentPadSource = source;
+
+    pad.classList.add("active");
+    setTimeout(() => pad.classList.remove("active"), 120);
+}
+
 const overlay = document.getElementById("startOverlay");
 const playButton = document.getElementById("playButton");
-const mpc = document.getElementById("mpc");
 
-playButton.addEventListener("click", () => {
+playButton.addEventListener("click", async () => {
 
-    baseTrack.loop = true; // se quiser looping
-    baseTrack.play();
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    masterCompressor = audioContext.createDynamicsCompressor();
+    masterCompressor.threshold.value = -18;
+    masterCompressor.ratio.value = 4;
+    masterCompressor.attack.value = 0.003;
+    masterCompressor.release.value = 0.2;
+
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = 1;
+
+    masterCompressor.connect(masterGain);
+    masterGain.connect(audioContext.destination);
+
+    if (audioContext.state === "suspended") {
+        await audioContext.resume();
+    }
+
+    await initBaseTrack();
+    await loadPads();
 
     overlay.style.opacity = "0";
     overlay.style.pointerEvents = "none";
 
-    mpc.style.filter = "blur(0px)";
+    const mpcBody = document.getElementById("mpcBody");
+    mpcBody.style.filter = "blur(0px)";
 });
-
 </script>
-
 </body>
 </html>
