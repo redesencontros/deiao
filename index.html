@@ -497,19 +497,30 @@ function showContent(url) {
     /* =========================
        TEXTO
     ========================= */
-    else if (lower.match(/\.txt$/)) {
-        fetch(url)
-            .then(res => res.text())
-            .then(text => {
-                const div = document.createElement("div");
-                div.style.color = "white";
-                div.style.textAlign = "center";
-                div.style.padding = "20px";
-                div.innerText = text;
-                display.appendChild(div);
-            });
-    }
+   else if (lower.match(/\.txt$/)) {
+    fetch(url)
+        .then(res => res.text())
+        .then(text => {
 
+            let align = "center"; // padrão
+            let lines = text.split("\n");
+
+            // Detecta comando na primeira linha
+            if (lines[0].startsWith("#align:")) {
+                align = lines[0].replace("#align:", "").trim();
+                lines.shift(); // remove linha de comando
+            }
+
+            const div = document.createElement("div");
+            div.style.color = "white";
+            div.style.textAlign = align;
+            div.style.padding = "20px";
+            div.style.whiteSpace = "pre-wrap";
+            div.innerText = lines.join("\n");
+
+            display.appendChild(div);
+        });
+}
     /* =========================
        APPS FULLSCREEN (.js dentro de apps-fullscreen/)
     ========================= */
@@ -546,4 +557,5 @@ function showContent(url) {
 </script>
 
 </body>
+
 </html>
