@@ -65,10 +65,11 @@ html, body {
 /* CONTENT */
 #contentDisplay {
     flex: 1; /* takes remaining vertical space */
+    min-height: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2vh 2vw;
+    padding: 0;
     overflow: hidden;
     z-index: 2;
 }
@@ -78,6 +79,8 @@ html, body {
 #contentDisplay div {
     max-width: 100%;
     max-height: 100%;
+    padding: 2vh 2vw;
+    box-sizing: border-box;
 }
 
 
@@ -369,7 +372,7 @@ const CONFIG = {
     headerImage: "https://redesencontros.github.io/dancaeissoaquio/assets/header.png",
     buttonImage: "https://redesencontros.github.io/dancaeissoaquio/assets/button.png",
     buttonSound: "https://redesencontros.github.io/dancaeissoaquio/assets/button-sound.mp3",
-    contentListTxt: "https://redesencontros.github.io/dancaeissoaquio/content-list.txt"
+    contentListTxt: "content-list.txt"
 };
 
 let deck = [];
@@ -460,7 +463,20 @@ if (existingFullscreen) existingFullscreen.remove();
         iframe.style.background = "transparent";
         iframe.style.zIndex = "1";
 
-        document.getElementById("gameLayer").appendChild(iframe);
+        const fullscreenContainer = document.createElement("div");
+fullscreenContainer.id = "fullscreenHTML";
+fullscreenContainer.style.position = "fixed";
+fullscreenContainer.style.inset = "0";
+fullscreenContainer.style.zIndex = "1";
+fullscreenContainer.style.pointerEvents = "auto";
+
+iframe.style.width = "100%";
+iframe.style.height = "100%";
+iframe.style.border = "none";
+iframe.style.background = "transparent";
+
+fullscreenContainer.appendChild(iframe);
+document.body.appendChild(fullscreenContainer);
 
     } else {
 
