@@ -7,8 +7,7 @@
 
 <style>
 html, body {
-    height:100%;
-    overflow:hidden;
+    min-height:100%;
     margin:0;
     background:transparent;
 }
@@ -19,6 +18,8 @@ body{
     align-items:center;
     font-family:Arial, sans-serif;
     user-select:none;
+    padding:clamp(12px, 4vh, 40px) 0;
+    box-sizing:border-box;
 }
 
 /* Mantido para não alterar estrutura */
@@ -75,7 +76,10 @@ body{
     position:relative;
     width:90vw;
     max-width:600px;
-    height:80vh;
+
+    height:auto;
+
+    box-sizing:border-box;
 
     display:flex;
     flex-direction:column;
@@ -119,12 +123,12 @@ body{
 #pads{
     width:100%;
     flex:1;
-
+    min-height:0;
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
 
-    gap:25px;
+    gap:clamp(8px, 2vh, 24px);
 }
 
 /* ===== PADS ULTRA FLAT ===== */
