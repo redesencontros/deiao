@@ -517,24 +517,39 @@ function showContent(url) {
         .then(res => res.text())
         .then(text => {
 
-            let align = "center"; // padrão
+            let align = "center";
             let lines = text.split("\n");
 
-            // Detecta comando na primeira linha
             if (lines[0].startsWith("#align:")) {
                 align = lines[0].replace("#align:", "").trim();
-                lines.shift(); // remove linha de comando
+                lines.shift();
             }
 
             const div = document.createElement("div");
-            div.style.color = "white";
             div.style.textAlign = align;
-            div.style.padding = "40px";
-            div.style.lineHeight = "1.5rem";
+            div.style.padding = "20px";
+            div.style.lineHeight = "1.2em";
             div.style.fontFamily = "MyFont, sans-serif";
-            div.style.fontSize = "1.2rem";
+            div.style.fontSize = "1.2em";
             div.style.whiteSpace = "pre-wrap";
-            div.innerText = lines.join("\n");
+
+            let currentColor = "white";
+
+            lines.forEach(line => {
+
+                // Detecta comando de cor
+                if (line.startsWith("#color:")) {
+                    currentColor = line.replace("#color:", "").trim();
+                    return;
+                }
+
+                const lineSpan = document.createElement("span");
+                lineSpan.style.display = "block";
+                lineSpan.style.color = currentColor;
+                lineSpan.innerText = line;
+
+                div.appendChild(lineSpan);
+            });
 
             display.appendChild(div);
         });
