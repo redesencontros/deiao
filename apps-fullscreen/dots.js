@@ -30,8 +30,8 @@ trailCanvas.style.height = dotCanvas.style.height = "100vh";
 trailCanvas.style.pointerEvents = "none";
 dotCanvas.style.pointerEvents = "none";
 
-trailCanvas.style.zIndex = "10";
-dotCanvas.style.zIndex = "11";
+trailCanvas.style.zIndex = "0";
+dotCanvas.style.zIndex = "1";
 
 document.body.appendChild(trailCanvas);
 document.body.appendChild(dotCanvas);
@@ -296,3 +296,4 @@ window.__destroyDots = function() {
 
 
 })();
+
