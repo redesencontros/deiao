@@ -1,17 +1,32 @@
 #align:left
 
+#color:#d0e422
 começou.
+#color:#c817bf
 como assim? 
+#color:#d0e422
 assim, com o verbo. dizem que no começo era o verbo.
+#color:#c817bf
 quem disse? 
+#color:#d0e422
 ninguém.
+#color:#c817bf
 e antes do começo?
+#color:#d0e422
 nada.
+#color:#c817bf
 quem disse?
+#color:#d0e422
 ninguém.
+#color:#c817bf
 ninguém disse nada e foi assim que começou?
+#color:#d0e422
 se é que houve começo, no começo era nada - disse - e pra dizer, moveu.
+#color:#c817bf
 então quer dizer que antes do começo, antes de nada, antes de tudo, era o movimento?
+#color:#d0e422
 em outros verbos, nada mais nada é igual a nada. e isto é algo.
+#color:#c817bf
 o quê que isso quer dizer?
+#color:#d0e422
 nada. deixa pra lá.
