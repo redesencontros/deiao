@@ -262,7 +262,7 @@ const dots = colors.map((color, index) => {
 ========================= */
 
 function animate() {
-console.log("frame");
+alert("frame");
    if (destroyed) return;
 
   idleTimer++;
@@ -276,7 +276,7 @@ console.log("frame");
   for (let dot of dots) dot.drawTrail(now);
   for (let dot of dots) if (dot.above) dot.drawDot(dotCtx);
 
- console.log("ANTES DO LOOP");
+ alert("ANTES DO LOOP");
 animationId = requestAnimationFrame(animate);
 }
 
@@ -300,6 +300,7 @@ window.__destroyDots = function() {
 
 
 })();
+
 
 
 
