@@ -272,7 +272,7 @@ function animate() {
 
   for (let dot of dots) dot.update(dots);
   for (let dot of dots) if (!dot.above) dot.drawDot(dotCtx);
-  for (let dot of dots) dot.drawTrail(now);
+  // for (let dot of dots) dot.drawTrail(now);
   for (let dot of dots) if (dot.above) dot.drawDot(dotCtx);
 
   animationId = requestAnimationFrame(animate);
@@ -298,6 +298,7 @@ window.__destroyDots = function() {
 
 
 })();
+
 
 
 
