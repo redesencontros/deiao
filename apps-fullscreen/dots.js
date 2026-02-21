@@ -17,6 +17,8 @@ const trailCtx = trailCanvas.getContext("2d");
 
 const dotCanvas = document.createElement("canvas");
 const dotCtx = dotCanvas.getContext("2d");
+   console.log(trailCtx);
+console.log(dotCtx);
 
 trailCanvas.style.position = "fixed";
 dotCanvas.style.position = "fixed";
@@ -296,6 +298,7 @@ window.__destroyDots = function() {
 
 
 })();
+
 
 
 
