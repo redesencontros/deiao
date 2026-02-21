@@ -6,6 +6,12 @@
 <title>DANÇA é isso aqui, ó</title>
 
 <style>
+@font-face {
+    font-family: "MyFont";
+    src: url("https://redesencontros.github.io/dancaeissoaquio/assets/fonts/jost3.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
 * {
     margin: 0;
     padding: 0;
@@ -525,6 +531,8 @@ function showContent(url) {
             div.style.textAlign = align;
             div.style.padding = "20px";
             div.style.lineHeight = "1.5";
+            div.style.fontFamily = "MyFont, sans-serif";
+            div.style.fontSize = "16px";
             div.style.whiteSpace = "pre-wrap";
             div.innerText = lines.join("\n");
 
