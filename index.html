@@ -149,7 +149,7 @@ canvas {
     right: 20px;
     width: 32px;
     height: 24px;
-    z-index: 1000;
+    z-index: 9999;
     cursor: pointer;
     pointer-events: auto;
 }
@@ -169,10 +169,12 @@ canvas {
     position: fixed;
     top: 60px;
     right: 20px;
-    z-index: 1000;
+    z-index: 9999;
     display: none;
     flex-direction: column;
     font-family: MyFont, sans-serif;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
 }
 
 .menuItem {
@@ -688,4 +690,5 @@ document.querySelectorAll(".menuItem").forEach(item => {
 </body>
 
 </html>
+
 
