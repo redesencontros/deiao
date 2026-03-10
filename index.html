@@ -181,37 +181,6 @@ canvas {
     cursor: pointer;
 }
 
-/* =========================
-   TEXT OVERLAY WINDOW
-========================= */
-
-#menuOverlay {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    pointer-events: auto;
-}
-
-#menuContent {
-    width: min(900px, 90vw);
-    height: min(80vh, 90vh);
-    overflow-y: auto;
-    color: white;
-    font-family: MyFont, sans-serif;
-    line-height: 1.3em;
-    padding: 40px;
-}
-
-#menuClose {
-    position: absolute;
-    top: 20px;
-    right: 25px;
-    font-size: 28px;
-    cursor: pointer;
-}
 </style>
 </head>
 <body>
@@ -664,9 +633,6 @@ function showContent(url) {
 
 const menuButton = document.getElementById("menuButton");
 const menuDropdown = document.getElementById("menuDropdown");
-const menuOverlay = document.getElementById("menuOverlay");
-const menuContent = document.getElementById("menuContent");
-const menuClose = document.getElementById("menuClose");
 
 menuButton.addEventListener("click", () => {
 
@@ -690,26 +656,18 @@ document.querySelectorAll(".menuItem").forEach(item => {
     item.addEventListener("click", () => {
 
         menuDropdown.style.display = "none";
-        menuOverlay.style.display = "flex";
 
-        const file = item.dataset.page;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
 
-        fetch(file)
-        .then(res => res.text())
-        .then(text => {
-            menuContent.innerText = text;
-        });
+        showContent(item.dataset.page);
 
     });
 
 });
 
-menuClose.addEventListener("click", () => {
-
-    menuOverlay.style.display = "none";
-    menuContent.innerHTML = "";
-
-});
 </script>
 <!-- =========================
      MENU BUTTON
@@ -727,17 +685,7 @@ menuClose.addEventListener("click", () => {
     <div class="menuItem" data-page="ficha.txt">FICHA TÉCNICA</div>
 </div>
 
-<!-- =========================
-     TEXT WINDOW
-========================= -->
-
-<div id="menuOverlay">
-
-    <div id="menuClose">✕</div>
-
-    <div id="menuContent"></div>
-
-</div>
 </body>
 
 </html>
+
