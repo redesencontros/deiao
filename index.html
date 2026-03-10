@@ -139,49 +139,6 @@ canvas {
     position: relative;
     z-index: 5;
 }
-/* =========================
-   HAMBURGER MENU
-========================= */
-
-#menuButton {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 32px;
-    height: 24px;
-    z-index: 9999;
-    cursor: pointer;
-    pointer-events: auto;
-}
-
-#menuButton span {
-    display: block;
-    height: 3px;
-    background: white;
-    margin: 5px 0;
-}
-
-/* =========================
-   MENU DROPDOWN
-========================= */
-
-#menuDropdown {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    z-index: 9999;
-    display: none;
-    flex-direction: column;
-    font-family: MyFont, sans-serif;
-    background: rgba(0,0,0,0.3);
-    backdrop-filter: blur(4px);
-}
-
-.menuItem {
-    color: white;
-    padding: 8px 12px;
-    cursor: pointer;
-}
 
 </style>
 </head>
@@ -206,21 +163,7 @@ canvas {
     </button>
 
 </div>
-<!-- =========================
-     MENU BUTTON
-========================= -->
 
-<div id="menuButton">
-    <span></span>
-    <span></span>
-    <span></span>
-</div>
-
-<div id="menuDropdown">
-    <div class="menuItem" data-page="content/sobre.txt">SOBRE</div>
-    <div class="menuItem" data-page="content/historico.txt">HISTÓRICO</div>
-    <div class="menuItem" data-page="content/ficha.txt">FICHA TÉCNICA</div>
-</div>
 <script>
 document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
@@ -462,7 +405,7 @@ const CONFIG = {
     headerImage: "https://redesencontros.github.io/dancaeissoaquio/assets/header.png",
     buttonImage: "https://redesencontros.github.io/dancaeissoaquio/assets/button.png",
     buttonSound: "https://redesencontros.github.io/dancaeissoaquio/assets/button-sound.mp3",
-    contentListTxt: "./content-list.txt"
+    contentListTxt: "content-list.txt"
 };
 
 let deck = [];
@@ -566,16 +509,12 @@ function showContent(url) {
         currentAudio = audio;
     }
 
-   /* =========================
-   TEXTO
-========================= */
-else if (lower.match(/\.txt$/)) {
-
+    /* =========================
+       TEXTO
+    ========================= */
+   else if (lower.match(/\.txt$/)) {
     fetch(url)
-        .then(res => {
-            if (!res.ok) throw new Error("File not found");
-            return res.text();
-        })
+        .then(res => res.text())
         .then(text => {
 
             let align = "center";
@@ -586,20 +525,19 @@ else if (lower.match(/\.txt$/)) {
                 lines.shift();
             }
 
-           const div = document.createElement("div");
-div.style.textAlign = align;
-div.style.padding = "20px";
-div.style.lineHeight = "1.2em";
-div.style.fontFamily = "MyFont, sans-serif";
-div.style.fontSize = "1.2em";
-div.style.whiteSpace = "pre-wrap";
-div.style.maxWidth = "900px";
-div.style.overflowY = "auto";
+            const div = document.createElement("div");
+            div.style.textAlign = align;
+            div.style.padding = "20px";
+            div.style.lineHeight = "1.2em";
+            div.style.fontFamily = "MyFont, sans-serif";
+            div.style.fontSize = "1.2em";
+            div.style.whiteSpace = "pre-wrap";
 
             let currentColor = "white";
 
             lines.forEach(line => {
 
+                // Detecta comando de cor
                 if (line.startsWith("#color:")) {
                     currentColor = line.replace("#color:", "").trim();
                     return;
@@ -611,17 +549,9 @@ div.style.overflowY = "auto";
                 lineSpan.innerText = line;
 
                 div.appendChild(lineSpan);
-
             });
 
             display.appendChild(div);
-
-        })
-        .catch(err => {
-
-            display.innerHTML = "<div style='color:white'>Content not found</div>";
-            console.error(err);
-
         });
 }
     /* =========================
@@ -656,67 +586,9 @@ div.style.overflowY = "auto";
         display.appendChild(iframe);
     }
 }
-/* =========================
-   MENU SYSTEM
-========================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-const menuButton = document.getElementById("menuButton");
-const menuDropdown = document.getElementById("menuDropdown");
-
-menuButton.addEventListener("click", () => {
-
-    const open = menuDropdown.style.display === "flex";
-    menuDropdown.style.display = open ? "none" : "flex";
-
-    if (!open) {
-        document.getElementById("contentDisplay").innerHTML = "";
-
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
-    }
-
-});
-
-document.querySelectorAll(".menuItem").forEach(item => {
-
-    item.addEventListener("click", () => {
-
-        menuDropdown.style.display = "none";
-
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
-
-        showContent(item.dataset.page);
-
-    });
-
-});
-document.addEventListener("click", (e) => {
-
-    if (!menuButton.contains(e.target) && !menuDropdown.contains(e.target)) {
-        menuDropdown.style.display = "none";
-    }
-
-});
-});
 
 </script>
+
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
