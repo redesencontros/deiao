@@ -633,16 +633,16 @@ function showContent(url) {
    MENU SYSTEM
 ========================= */
 
+document.addEventListener("DOMContentLoaded", () => {
+
 const menuButton = document.getElementById("menuButton");
 const menuDropdown = document.getElementById("menuDropdown");
 
 menuButton.addEventListener("click", () => {
 
     const open = menuDropdown.style.display === "flex";
-
     menuDropdown.style.display = open ? "none" : "flex";
 
-    // hide game content if menu opens
     if (!open) {
         document.getElementById("contentDisplay").innerHTML = "";
 
@@ -651,6 +651,7 @@ menuButton.addEventListener("click", () => {
             currentAudio = null;
         }
     }
+
 });
 
 document.querySelectorAll(".menuItem").forEach(item => {
@@ -690,5 +691,6 @@ document.querySelectorAll(".menuItem").forEach(item => {
 </body>
 
 </html>
+
 
 
