@@ -52,7 +52,7 @@ html, body {
     pointer-events: none;   /* ⭐ IMPORTANT */
 }
 
-/* HEADER */
+/* DEFAULT HEADER (desktop first) */
 #header {
     width: 100%;
     display: flex;
@@ -64,8 +64,22 @@ html, body {
 }
 
 #header img {
-    width: clamp(100px, 18vw, 300px);
+    width: clamp(100px, 18vw, 300px); /* desktop: bigger image */
     height: auto;
+}
+
+/* MOBILE HEADER */
+@media (max-width: 767px) {
+    #header {
+        justify-content: flex-start;   /* align left on mobile */
+        padding-top: 5vh;
+        padding-left: 5vw;
+    }
+
+    #header img {
+        width: clamp(80px, 50vw, 150px); /* smaller on mobile */
+        height: auto;
+    }
 }
 
 /* CONTENT */
@@ -954,4 +968,3 @@ document.addEventListener("keydown", (e) => {
 </body>
 
 </html>
-
