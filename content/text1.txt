@@ -2,7 +2,7 @@
 
 #color:#d0e422
 começou.
-#color:#FFFFFF
+#color:#FEFEFE
 como assim? 
 #color:#d0e422
 assim, com o verbo. dizem que no começo era o verbo.
@@ -30,5 +30,6 @@ em outros verbos, nada mais nada é igual a nada. e isto é algo.
 o quê que isso quer dizer?
 #color:#d0e422
 nada. deixa pra lá.
+
 
 
