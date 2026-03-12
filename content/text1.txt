@@ -3,9 +3,9 @@
 #color:#d0e422
 começou.
 #color:#FFFFFF
-como assim? 
+*como assim?*
 #color:#d0e422
-assim, com o verbo. dizem que no começo era o verbo.
+**assim, com o verbo. dizem que no começo era o verbo.**
 #color:#FFFFFF
 quem disse? 
 #color:#d0e422
@@ -30,3 +30,4 @@ em outros verbos, nada mais nada é igual a nada. e isto é algo.
 o quê que isso quer dizer?
 #color:#d0e422
 nada. deixa pra lá.
+
