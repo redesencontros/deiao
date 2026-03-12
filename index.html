@@ -244,7 +244,15 @@ canvas {
         transparent 100%
     );
 }
+/* MENU ITEM HOVER FEEDBACK */
+.menuItem {
+    transition: transform 0.15s ease, color 0.15s ease;
+}
 
+.menuItem:hover {
+    color: #d0e422; /* bright color feedback */
+    transform: scale(1.05); /* subtle zoom effect */
+}
 </style>
 </head>
 <body>
@@ -828,7 +836,9 @@ else if (lower.match(/\.txt$/)) {
 
                 lineSpan.style.display = "block";
                 lineSpan.style.color = currentColor;
-                lineSpan.innerText = line;
+                lineSpan.innerHTML = line
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")   // bold
+    .replace(/\*(.*?)\*/g, "<i>$1</i>");     // italic
 
                 (currentColumns || div).appendChild(lineSpan);
 
@@ -928,9 +938,19 @@ menuButton.classList.remove("open");
 
 });
 });
+// Close menu on ESC key
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        const menuDropdown = document.getElementById("menuDropdown");
+        const menuButton = document.getElementById("menuButton");
 
+        if (menuDropdown.style.display === "flex") {
+            menuDropdown.style.display = "none";
+            menuButton.classList.remove("open");
+        }
+    }
+});
 </script>
 </body>
 
 </html>
-
