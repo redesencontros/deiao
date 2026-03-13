@@ -9,7 +9,7 @@
 @font-face {
     font-family: "MyFont";
     src: url("https://redesencontros.github.io/dancaeissoaquio/assets/fonts/jost3.woff2") format("woff2");
-    font-weight: normal;
+    font-weight: 370;
     font-style: normal;
 }
 * {
@@ -843,6 +843,10 @@ else if (lower.match(/\.txt$/)) {
 
             let currentSize = "1.2em";
 
+            let columnIndex = 0;
+let columns = [];
+
+
             lines.forEach(line => {
 
                 line = line.trim();
@@ -866,18 +870,38 @@ if (line.startsWith("#size:")) {
 
                 if (line.startsWith("#columns:")) {
 
-                    const cols = parseInt(line.replace("#columns:", "").trim());
+    const cols = parseInt(line.replace("#columns:", "").trim());
 
-                    const columnContainer = document.createElement("div");
-                    columnContainer.style.display = "grid";
-                    columnContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-                    columnContainer.style.gap = "20px";
-                    columnContainer.style.margin = "20px 0";
+    const columnContainer = document.createElement("div");
+    columnContainer.style.display = "grid";
+    columnContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    columnContainer.style.gap = "20px";
 
-                    div.appendChild(columnContainer);
-                    currentColumns = columnContainer;
-                    return;
-                }
+    div.appendChild(columnContainer);
+
+    columns = [];
+    columnIndex = 0;
+
+    for (let i = 0; i < cols; i++) {
+        const col = document.createElement("div");
+        columnContainer.appendChild(col);
+        columns.push(col);
+    }
+
+    currentColumns = columns[columnIndex];
+    return;
+}
+
+if (line.startsWith("#column")) {
+    columnIndex++;
+    currentColumns = columns[columnIndex];
+    return;
+}
+if (line.includes("|")) {
+    const parts = line.split("|");
+    const role = parts[0].trim();
+    const name = parts[1].trim();
+}
 
                 if (line.startsWith("#image:")) {
 
