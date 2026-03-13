@@ -841,7 +841,16 @@ else if (lower.match(/\.txt$/)) {
             let currentColor = "white";
             let currentColumns = null;
 
+            let currentSize = "1.2em";
+
             lines.forEach(line => {
+
+                line = line.trim();
+
+if (line.startsWith("#size:")) {
+    currentSize = line.replace("#size:", "").trim();
+    return;
+}
 
                 if (line.startsWith("#color:")) {
                     let c = line.replace("#color:", "").trim();
@@ -926,9 +935,11 @@ else if (lower.match(/\.txt$/)) {
 
                 lineSpan.style.display = "block";
                 lineSpan.style.color = currentColor;
+                lineSpan.style.fontSize = currentSize;
                 lineSpan.innerHTML = line
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")   // bold
-    .replace(/\*(.*?)\*/g, "<i>$1</i>");     // italic
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/\*(.*?)\*/g, "<i>$1</i>")
+    .replace(/__(.*?)__/g, "<u>$1</u>");
 
                 (currentColumns || div).appendChild(lineSpan);
 
