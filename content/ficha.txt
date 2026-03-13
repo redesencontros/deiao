@@ -1,73 +1,73 @@
 #align:center
-#size:1.3em
+#size:1.2em
 **‘DANÇA é isso aqui, ó’**
 
 
-#size:1.1em
+#size:1em
 __Criação__
 
-#size:0.9em
+#size:0.8em
 Bernardo Stumpf
 Daniel Figueiredo
 Mariana Rocha
 Thiago de Souza
 
-#size:1.1em
+#size:1em
 __Fotografias__
 
-#size:0.9em
+#size:0.8em
 Daniela López Lugo
 Jessica Queiroz
 Leonard Ferraz
 Mariana Rocha
 Renato Mangolin
 
-#size:1.1em
+#size:1em
 __Vídeos__
 
-#size:0.9em
+#size:0.8em
 Daniel Figueiredo
 Jessica Queiroz
 Leonardo Nabuco
 Mariana Rocha
 
-#size:1.1em
+#size:1em
 __Programação__
 
-#size:0.9em
+#size:0.8em
 Bernardo Stumpf
 (colaboração: Mathias Basílio)
 
-#size:1.1em
+#size:1em
 __Parceria__
 
-#size:0.9em
+#size:0.8em
 Netuhria Criações
 
-#size:1.1em
+#size:1em
 __Realização__
 
 rdct
 
 
-#size:1.3em
+#size:1.2em
 **CENA-FESTA ‘DANÇA’**
 
 
-#size:1.1em
+#size:1em
 __Criação e atuação__
 
-#size:0.9em
+#size:0.8em
 Bernardo Stumpf
 Hugo Oliveira
 Luana Bezerra
 Luciana Monnerat
 Thiago de Souza
 
-#size:1.1em
+#size:1em
 __Ações-conjuntas__
 
-#size:0.9em
+#size:0.8em
 Bonde do Jack
 Casa de Cosmos
 Clube do Passinho
@@ -85,20 +85,20 @@ La Parceria
 La Puerca Jam
 Marina Santo
 
-#size:1.1em
+#size:1em
 __Produção__
 
-#size:0.9em
+#size:0.8em
 Jessica Queiroz
 
-#size:1.1em
+#size:1em
 __Parceria__
 
-#size:0.9em
+#size:0.8em
 Galeria Providência
 
-#size:1.1em
+#size:1em
 __Realização__
 
-#size:0.9em
+#size:0.8em
 rdct
