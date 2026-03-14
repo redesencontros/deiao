@@ -6,6 +6,7 @@ Após a estreia, em duas apresentações no RJ, um novo entendimento sobre as po
 
 Em 2023, através do prêmio FOCA (Fomento à Cultura Carioca), foi realizada uma “Circulação Carioca” em 7 bairros periféricos do Rio de Janeiro (Bangu, Gamboa, Maré, Madureira, Pavuna, Penha e Tijuca), junto a 8 coletivos pretos e LGBTQIA+ parceiros:
 
+#size:0.9em
 [Bonde do Jack](https://www.instagram.com/bondedojack/)
 
 [Casa de Cosmos](https://www.instagram.com/casadecosmos/)
@@ -22,8 +23,10 @@ Em 2023, através do prêmio FOCA (Fomento à Cultura Carioca), foi realizada um
 
 [Jamaicaxias](https://www.instagram.com/jamaicaxias/)
 
+#size:1.1em
 Em seguida, a iniciativa participou do Festival Hola Rio (Madri - Espanha), onde realizou apresentações junto a 6 grupos/instituições de artistas imigrantes:
 
+#size:0.9em
 [Daniela López Lugo](https://www.danielalopezlugo.com/)
 
 [DJ Jed](https://www.instagram.com/jed__bass/)
@@ -36,8 +39,10 @@ Em seguida, a iniciativa participou do Festival Hola Rio (Madri - Espanha), onde
 
 [Marina Santo](https://www.instagram.com/soymarinasanto/)
 
+#size:1.1em
 Em 2025, a iniciativa realizou uma “Circulação fluminense”, nas cidades de Cabo Frio, Duque de Caxias, Niterói e Petrópolis, junto aos coletivos:
 
+#size:0.9em
 [E.C.C. Deoclécio Damasceno de Freitas](https://www.instagram.com/espacoculturalmaestro/)
 
 [Fresh Baile Charme](https://www.instagram.com/freshcharme/)
@@ -48,4 +53,5 @@ Em 2025, a iniciativa realizou uma “Circulação fluminense”, nas cidades de
 
 [Jamaicaxias](https://www.instagram.com/jamaicaxias/)
 
+#size:1.1em
 Em 2026, a ação realiza uma segunda circulação carioca, através do Circuito MAM/Capanema.
