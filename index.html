@@ -239,6 +239,19 @@ canvas {
     z-index: 3;
     pointer-events: auto;
 }
+
+/* MENU LINKS */
+
+#menuContent a {
+    color: #d0e422;
+    text-decoration: none;
+}
+
+#menuContent a:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
 /* HIDE SCROLLBAR BUT KEEP SCROLLING */
 
 #menuContent::-webkit-scrollbar {
@@ -1026,7 +1039,8 @@ nameSpan.className = "name";
                 lineSpan.innerHTML = line
     .replace(/__(.*?)__/g, "<u>$1</u>")
     .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/\*(.*?)\*/g, "<i>$1</i>");
+    .replace(/\*(.*?)\*/g, "<i>$1</i>")
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
 
 
                 div.appendChild(lineSpan);
