@@ -1,6 +1,9 @@
-#title
+align:center
+#size:2em
 ‘DANÇA é isso aqui, ó’
 
+
+#credits
 Criação | Bernardo Stumpf
 | Daniel Figueiredo
 | Mariana Rocha
@@ -20,12 +23,17 @@ Vídeos | Daniel Figueiredo
 Programação | Bernardo Stumpf (colaboração: Mathias Basílio)
 
 Parceria | Netuhria Criações
+
 Realização | rdct
+#endcredits
 
 
-#title
+align:center
+#size:2em
 CENA-FESTA ‘DANÇA’
 
+
+#credits
 Criação e atuação | Bernardo Stumpf
 | Hugo Oliveira
 | Luana Bezerra
@@ -54,3 +62,4 @@ Produção | Jessica Queiroz
 Parceria | Galeria Providência
 
 Realização | rdct
+#endcredits
