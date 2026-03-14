@@ -1,8 +1,8 @@
 #align:center
-#size:2em
+#size:1.2em
 ‘DANÇA é isso aqui, ó’
 
-
+#size:1em
 #credits
 Criação | Bernardo Stumpf
 | Daniel Figueiredo
@@ -29,10 +29,10 @@ Realização | rdct
 
 
 #align:center
-#size:2em
+#size:1.2em
 CENA-FESTA ‘DANÇA’
 
-
+#size:1em
 #credits
 Criação e atuação | Bernardo Stumpf
 | Hugo Oliveira
