@@ -17,6 +17,7 @@ PROGRAMAÇÃO | Bernardo Stumpf
 PARCERIA | Netuhria Criações
 REALIZAÇÃO | rdct
 #endcredits
+
 __CENA-FESTA ‘DANÇA’__
 #credits
 CRIAÇÃO E ATUAÇÃO | Bernardo Stumpf
