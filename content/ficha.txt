@@ -1,4 +1,4 @@
-align:center
+#align:center
 #size:2em
 ‘DANÇA é isso aqui, ó’
 
@@ -28,7 +28,7 @@ Realização | rdct
 #endcredits
 
 
-align:center
+#align:center
 #size:2em
 CENA-FESTA ‘DANÇA’
 
