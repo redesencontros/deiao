@@ -4,30 +4,22 @@ Criação | Bernardo Stumpf
 | Daniel Figueiredo
 | Mariana Rocha
 | Thiago de Souza
-
 Fotografias | Daniela López Lugo
 | Jessica Queiroz
 | Leonard Ferraz
 | Mariana Rocha
 | Renato Mangolin
-
 Vídeos | Daniel Figueiredo
 | Jessica Queiroz
 | Leonardo Nabuco
 | Mariana Rocha
-
 Programação | Bernardo Stumpf
 | (colaboração: Mathias Basílio)
-
 Parceria | Netuhria Criações
-
 Realização | rdct
 #endcredits
-
-
 #size:1em
 __CENA-FESTA ‘DANÇA’__
-
 #size:0.9em
 #credits
 Criação e atuação | Bernardo Stumpf
@@ -35,7 +27,6 @@ Criação e atuação | Bernardo Stumpf
 | Luana Bezerra
 | Luciana Monnerat
 | Thiago de Souza
-
 Ações-conjuntas | Bonde do Jack
 | Casa de Cosmos
 | Clube do Passinho
@@ -52,10 +43,7 @@ Ações-conjuntas | Bonde do Jack
 | La Parceria
 | La Puerca Jam
 | Marina Santo
-
 Produção | Jessica Queiroz
-
 Parceria | Galeria Providência
-
 Realização | rdct
 #endcredits
