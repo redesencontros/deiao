@@ -28,7 +28,7 @@ Parceria | Netuhria Criações
 
 Realização | rdct
 #endcredits
-#endcolumn
+#endcolumns
 
 
 #size:1em
@@ -67,4 +67,4 @@ Parceria | Galeria Providência
 
 Realização | rdct
 #endcredits
-#endcolumn
+#endcolumns
