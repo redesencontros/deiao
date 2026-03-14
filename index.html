@@ -866,6 +866,8 @@ else if (lower.match(/\.txt$/)) {
             const div = document.createElement("div");
 
             div.style.textAlign = align;
+            div.style.alignSelf = "stretch";
+            div.style.hyphens = "auto";
             div.style.lineHeight = "1.4em";
             div.style.fontFamily = "MyFont, sans-serif";
             div.style.fontSize = "1.1em";
