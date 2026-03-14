@@ -1,0 +1,61 @@
+#size:0.9em
+#credits
+Criação | Bernardo Stumpf
+| Daniel Figueiredo
+| Mariana Rocha
+| Thiago de Souza
+
+Fotografias | Daniela López Lugo
+| Jessica Queiroz
+| Leonard Ferraz
+| Mariana Rocha
+| Renato Mangolin
+
+Vídeos | Daniel Figueiredo
+| Jessica Queiroz
+| Leonardo Nabuco
+| Mariana Rocha
+
+Programação | Bernardo Stumpf
+| (colaboração: Mathias Basílio)
+
+Parceria | Netuhria Criações
+
+Realização | rdct
+#endcredits
+
+
+#size:1em
+__CENA-FESTA ‘DANÇA’__
+
+#size:0.9em
+#credits
+Criação e atuação | Bernardo Stumpf
+| Hugo Oliveira
+| Luana Bezerra
+| Luciana Monnerat
+| Thiago de Souza
+
+Ações-conjuntas | Bonde do Jack
+| Casa de Cosmos
+| Clube do Passinho
+| Daniela López Lugo
+| DJ Jed
+| E.C.C. Deoclécio Damasceno de Freitas
+| Eu Amo Baile Charme
+| Fresh Baile Charme
+| Gabriela Cordovez y DJ Dani
+| Galeria Providência
+| Groove Party
+| Imperadores da Dança
+| Jamaicaxias
+| La Parceria
+| La Puerca Jam
+| Marina Santo
+
+Produção | Jessica Queiroz
+
+Parceria | Galeria Providência
+
+Realização | rdct
+#endcredits
