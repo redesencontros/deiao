@@ -277,6 +277,47 @@ canvas {
     color: #d0e422; /* bright color feedback */
     transform: scale(1.05); /* subtle zoom effect */
 }
+/* FILM-STYLE CREDITS LAYOUT */
+
+.creditsGrid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    column-gap: clamp(20px,3vw,60px);
+    row-gap: 3x;
+    width: 100%;
+}
+
+.creditsGrid .role {
+    grid-column: 1;
+    justify-self: end;
+    opacity: 0.75;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+font-size: 0.6em;
+}
+
+.creditsGrid .name {
+    grid-column: 3;
+    justify-self: start;
+    font-size: 0.8em;
+}
+
+/* MOBILE */
+
+@media (max-width: 767px) {
+
+    .creditsGrid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .creditsGrid .role,
+    .creditsGrid .name {
+        grid-column: 1;
+        justify-self: center;
+    }
+
+}
 </style>
 </head>
 <body>
@@ -703,8 +744,6 @@ document.getElementById("menuContent").style.display = "none";
     showContent(deck[currentIndex++]);
 });
 
-
-
 function showContent(url) {
 
     if (window.__destroyDots) {
@@ -865,20 +904,10 @@ if (line.startsWith("#credits")) {
 
     inCredits = true;
 
-    creditsGrid = document.createElement("div");   // ⭐ MISSING LINE
+    creditsGrid = document.createElement("div");
+creditsGrid.className = "creditsGrid";
 
-    creditsGrid.style.display = "grid";
-    creditsGrid.style.gridTemplateColumns = "max-content max-content";
-
-    if (window.innerWidth < 768) {
-        creditsGrid.style.gridTemplateColumns = "1fr";
-    }
-
-    creditsGrid.style.columnGap = "clamp(20px,4vw,60px)";
-    creditsGrid.style.rowGap = "6px";
-    creditsGrid.style.justifyContent = "center";
-    creditsGrid.style.margin = "0 auto";
-    creditsGrid.style.width = "fit-content";
+   creditsGrid.className = "creditsGrid";
 
     div.appendChild(creditsGrid);
 
@@ -897,6 +926,9 @@ if (inCredits && line.includes("|")) {
 
     const roleSpan = document.createElement("span");
     const nameSpan = document.createElement("span");
+
+    roleSpan.className = "role";
+nameSpan.className = "name";
 
     roleSpan.textContent = role;
     roleSpan.style.whiteSpace = "nowrap";
@@ -1005,7 +1037,7 @@ if (inCredits && line.includes("|")) {
             });
 
             display.appendChild(div);
-
+           
         })
         .catch(err => {
 
