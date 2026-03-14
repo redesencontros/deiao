@@ -293,13 +293,13 @@ canvas {
     opacity: 0.75;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-font-size: 0.6em;
+font-size: 0.8em;
 }
 
 .creditsGrid .name {
     grid-column: 3;
     justify-self: start;
-    font-size: 0.8em;
+    font-size: 1.1em;
 }
 
 /* MOBILE */
@@ -853,9 +853,9 @@ else if (lower.match(/\.txt$/)) {
             const div = document.createElement("div");
 
             div.style.textAlign = align;
-            div.style.lineHeight = "1.2em";
+            div.style.lineHeight = "1.4em";
             div.style.fontFamily = "MyFont, sans-serif";
-            div.style.fontSize = "1.2em";
+            div.style.fontSize = "1.1em";
             div.style.whiteSpace = "pre-wrap";
 
             /* DIFFERENT BEHAVIOR MENU vs GAME */
@@ -879,7 +879,7 @@ else if (lower.match(/\.txt$/)) {
 
             let currentColor = "white";
             let currentColumns = null;
-            let currentSize = "1.2em";
+            let currentSize = "1.1em";
             let inCredits = false;
             let creditsGrid = null;
             
@@ -949,9 +949,6 @@ nameSpan.className = "name";
     }
 
     roleSpan.style.opacity = "0.65";
-
-    roleSpan.style.fontSize = currentSize;
-    nameSpan.style.fontSize = currentSize;
 
     roleSpan.style.color = currentColor;
     nameSpan.style.color = currentColor;
