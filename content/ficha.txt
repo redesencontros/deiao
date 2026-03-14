@@ -13,7 +13,7 @@ VÍDEOS | Daniel Figueiredo
 | Leonardo Nabuco
 | Mariana Rocha
 PROGRAMAÇÃO | Bernardo Stumpf
-| *(colaboração: Mathias Basílio)*
+| (colaboração: Mathias Basílio)
 PARCERIA | Netuhria Criações
 REALIZAÇÃO | rdct
 #endcredits
