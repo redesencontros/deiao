@@ -31,12 +31,11 @@ Realização | rdct
 #endcolumns
 
 
-#size:1em
-#column
-#credits
-CENA-FESTA ‘DANÇA’
+#size:1.2em
+**CENA-FESTA ‘DANÇA’**
 
 #size:1em
+#column
 #credits
 Criação e atuação | Bernardo Stumpf
 | Hugo Oliveira
