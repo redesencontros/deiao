@@ -563,13 +563,13 @@ class Boid {
 
       this.vx += (alignX - this.vx) * 0.05;
       this.vy += (alignY - this.vy) * 0.05;
-      this.vx += (cohesionX - this.x) * 0.0015;
-      this.vy += (cohesionY - this.y) * 0.0015;
+      this.vx += (cohesionX - this.x) * 0.001;
+      this.vy += (cohesionY - this.y) * 0.001;
       this.vx += separationX * 0.02;
       this.vy += separationY * 0.02;
     }
 
-    const globalPull = 0.00015;
+    const globalPull = 0.0001;
 
 const driftX = width/2 + Math.sin(flowTime * 0.2) * width * 0.35;
 const driftY = height/2 + Math.cos(flowTime * 0.15) * height * 0.35;
