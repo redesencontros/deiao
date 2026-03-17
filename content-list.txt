@@ -3,5 +3,6 @@ content/video1.mp4
 content/audio1.mp3
 content/text1.txt
 content/gif1.gif
+content/comecou.gif
 apps-fullscreen/dots.js
 apps/mpc/index.html
