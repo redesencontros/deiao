@@ -938,7 +938,13 @@ else if (lower.match(/\.txt$/)) {
 
             div.style.textAlign = align;
             div.style.alignSelf = "stretch";
-            div.style.hyphens = "auto";
+            div.style.hyphens = "none";
+            div.style.webkitHyphens = "none";
+            div.style.msHyphens = "none";
+            div.style.wordBreak = "normal";
+            div.style.overflowWrap = "break-word";   // prevents overflow
+            div.style.lineBreak = "auto";            // better CJK + general behavior
+            div.style.textWrap = "pretty";           // modern browsers (balances lines)
             div.style.lineHeight = "1.4em";
             div.style.fontFamily = "MyFont, sans-serif";
             div.style.fontSize = "1.1em";
