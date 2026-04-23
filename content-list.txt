@@ -1,3 +1,15 @@
+content/frasethi1.gif
+content/frasethi2.gif
+content/frasethi3.gif
+content/frasethi4.gif
+content/frasethi5.gif
+content/frasethi6.gif
+content/frasethi7.gif
+content/frasethi8.gif
+content/frasethi9.gif
+content/frasethi10.gif
+content/frasethi11.gif
+content/frasethi12.gif
 content/gif1.gif
 content/comecou.gif
 apps-fullscreen/dots.js
